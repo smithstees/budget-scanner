@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Budget Options Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #0a0c0f;
+  --bg2:      #111418;
+  --bg3:      #181c22;
+  --border:   #242830;
+  --border2:  #2e3440;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --dim:      #3a4455;
+  --green:    #22d3a0;
+  --green-bg: #0d2e25;
+  --green-dim:#0a6648;
+  --red:      #f87171;
+  --red-bg:   #2d1515;
+  --red-dim:  #7a2020;
+  --amber:    #fbbf24;
+  --amber-bg: #2d2208;
+  --blue:     #60a5fa;
+  --blue-bg:  #0d1f3a;
+  --mono:     'Space Mono', monospace;
+  --sans:     'DM Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; }
+body { min-height: 100vh; padding: 0; }
+
+/* ── LAYOUT ── */
+.shell { max-width: 820px; margin: 0 auto; padding: 24px 16px 60px; }
+
+/* ── HEADER ── */
+.topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.logo-mark { width: 36px; height: 36px; border: 1px solid var(--green-dim); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.logo-mark svg { width: 18px; height: 18px; }
+.title-block h1 { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: 0.05em; }
+.title-block p  { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+.status-pill { margin-left: auto; font-family: var(--mono); font-size: 10px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border2); color: var(--muted); display: flex; align-items: center; gap: 5px; }
+.status-pill.live { border-color: var(--green-dim); color: var(--green); }
+.status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-pill.live .dot { animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+
+/* ── SECTION TITLES ── */
+.section-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── SETUP PANEL ── */
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+@media(max-width:560px){ .setup-grid { grid-template-columns:1fr; } }
+
+.setup-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.setup-card label { font-size: 11px; color: var(--muted); font-family: var(--mono); display: block; margin-bottom: 8px; letter-spacing: 0.06em; }
+.setup-card input[type=text], .setup-card input[type=password] {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+  color: var(--text); font-family: var(--mono); font-size: 12px; padding: 9px 10px;
+  outline: none; transition: border-color .2s;
+}
+.setup-card input:focus { border-color: var(--green-dim); }
+.setup-card .hint { font-size: 10px; color: var(--dim); margin-top: 6px; line-height: 1.5; }
+.setup-card .hint a { color: var(--blue); text-decoration: none; }
+.save-row { display: flex; gap: 8px; margin-top: 8px; }
+.btn-sm { padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border2); background: transparent; color: var(--muted); font-family: var(--mono); font-size: 11px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-sm:hover { border-color: var(--green-dim); color: var(--green); }
+.btn-sm.active { background: var(--green-bg); border-color: var(--green-dim); color: var(--green); }
+.connected-tag { font-size: 10px; font-family: var(--mono); color: var(--green); margin-top: 6px; display: none; }
+
+/* ── SCHEDULER ── */
+.scheduler-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 24px; }
+.sched-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sched-label { font-size: 11px; color: var(--muted); font-family: var(--mono); white-space: nowrap; }
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle { position: relative; width: 36px; height: 20px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track { position: absolute; inset: 0; background: var(--border2); border-radius: 10px; cursor: pointer; transition: background .2s; }
+.toggle input:checked + .toggle-track { background: var(--green-dim); }
+.toggle-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: var(--muted); border-radius: 50%; transition: transform .2s, background .2s; pointer-events: none; }
+.toggle input:checked ~ .toggle-thumb { transform: translateX(16px); background: var(--green); }
+.sched-times { display: flex; gap: 8px; flex-wrap: wrap; }
+.time-badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: 5px; background: var(--bg3); border: 1px solid var(--border2); color: var(--muted); }
+.time-badge.active { background: var(--amber-bg); border-color: #5a4010; color: var(--amber); }
+.next-scan-label { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-left: auto; }
+
+/* ── SCAN BUTTON ── */
+.scan-btn-wrap { margin-bottom: 24px; }
+.scan-btn {
+  width: 100%; padding: 14px; background: var(--green-bg); border: 1px solid var(--green-dim);
+  border-radius: 10px; color: var(--green); font-family: var(--mono); font-size: 13px;
+  font-weight: 700; letter-spacing: 0.08em; cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.scan-btn:hover { background: #0f3d2e; border-color: var(--green); }
+.scan-btn:disabled { opacity: .4; cursor: not-allowed; }
+.scan-btn .arrow { font-size: 16px; transition: transform .2s; }
+.scan-btn:hover .arrow { transform: translateX(4px); }
+
+/* ── PROGRESS ── */
+.progress-wrap { margin-bottom: 16px; display: none; }
+.progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width .3s; width: 0%; }
+.progress-label { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 6px; }
+
+/* ── STATS ROW ── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+@media(max-width:500px){ .stats-row { grid-template-columns: repeat(2,1fr); } }
+.stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.stat-val { font-family: var(--mono); font-size: 22px; font-weight: 700; line-height: 1; }
+.stat-val.g { color: var(--green); }
+.stat-val.r { color: var(--red); }
+.stat-val.a { color: var(--amber); }
+.stat-lbl { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 0.04em; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.tab { padding: 8px 16px; font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; border: none; background: transparent; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; letter-spacing: 0.05em; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ── SIGNAL CARDS ── */
+.signal-list { display: flex; flex-direction: column; gap: 10px; }
+.signal-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; border-left: 3px solid var(--border2); transition: border-color .2s;
+}
+.signal-card.bullish { border-left-color: var(--green); }
+.signal-card.bearish { border-left-color: var(--red); }
+.signal-card.neutral  { border-left-color: var(--dim); }
+.signal-card:hover { border-color: var(--border2); }
+
+.sig-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.sig-ticker { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--text); }
+.sig-price  { font-family: var(--mono); font-size: 14px; color: var(--text); }
+.sig-chg { font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+.sig-chg.up   { background: var(--green-bg); color: var(--green); }
+.sig-chg.dn   { background: var(--red-bg);   color: var(--red);   }
+.sig-chg.flat { background: var(--bg3);       color: var(--muted); }
+.sig-dir { margin-left: auto; font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 4px; font-weight: 700; letter-spacing: 0.06em; }
+.sig-dir.bullish { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-dim); }
+.sig-dir.bearish { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-dim);   }
+.sig-dir.neutral  { background: var(--bg3);      color: var(--muted); border: 1px solid var(--border2);   }
+
+/* ── CANDLES ── */
+.candle-row { display: flex; gap: 4px; align-items: flex-end; margin: 10px 0; height: 36px; }
+.candle { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.c-wick { width: 2px; border-radius: 1px; }
+.c-body { width: 10px; border-radius: 2px; }
+.candle.g .c-body { background: var(--green); } .candle.g .c-wick { background: #0f9972; }
+.candle.r .c-body { background: var(--red);   } .candle.r .c-wick { background: #b84040; }
+.candle.d .c-body { background: var(--dim);   } .candle.d .c-wick { background: #2a3345; }
+
+.sig-info { font-size: 12px; color: var(--muted); line-height: 1.7; font-family: var(--mono); }
+.sig-info span { color: var(--text); }
+.strength-pips { display: inline-flex; gap: 2px; vertical-align: middle; margin-left: 4px; }
+.pip { width: 6px; height: 6px; border-radius: 1px; background: var(--border2); }
+.pip.on { background: var(--amber); }
+
+.contract-box { margin-top: 10px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 7px; padding: 9px 12px; display: flex; align-items: center; gap: 8px; }
+.contract-box .c-type { font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; }
+.c-type.call { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-dim); }
+.c-type.put  { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-dim);   }
+.contract-box .c-detail { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.contract-box .c-detail strong { color: var(--text); }
+
+/* ── LEVELS TAB ── */
+.level-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-family: var(--mono); }
+.level-row:last-child { border-bottom: none; }
+.lv-ticker { font-size: 13px; font-weight: 700; width: 56px; }
+.lv-bar-wrap { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.lv-bar { height: 100%; border-radius: 3px; transition: width .6s; }
+.lv-bar.ba { background: var(--green); }
+.lv-bar.bs { background: var(--red);   }
+.lv-bar.ap { background: var(--amber); }
+.lv-status { font-size: 10px; font-weight: 700; width: 110px; text-align: right; letter-spacing: 0.04em; }
+.lv-status.ba { color: var(--green); }
+.lv-status.bs { color: var(--red);   }
+.lv-status.ap { color: var(--amber); }
+
+/* ── LOG TAB ── */
+.log-list { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 2.2; }
+.log-line.ok  { color: var(--green); }
+.log-line.skip { color: var(--dim); }
+
+/* ── NOTIFICATION LOG ── */
+.notif-log { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-top: 24px; }
+.notif-entry { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.notif-entry:last-child { border-bottom: none; }
+.notif-time { font-family: var(--mono); font-size: 10px; color: var(--dim); white-space: nowrap; padding-top: 1px; }
+.notif-text { color: var(--muted); line-height: 1.5; }
+.notif-text strong { color: var(--text); }
+
+/* ── EMPTY / LOADING ── */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-family: var(--mono); font-size: 12px; line-height: 2; }
+.spinner-wrap { text-align: center; padding: 30px 0; }
+.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border2); border-top-color: var(--green); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FOOTER ── */
+.footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--dim); font-family: var(--mono); line-height: 1.8; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg3); border: 1px solid var(--green-dim); color: var(--green); font-family: var(--mono); font-size: 12px; padding: 10px 16px; border-radius: 8px; z-index: 999; transform: translateY(60px); opacity: 0; transition: all .3s; pointer-events: none; }
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <div class="logo-mark">
+      <svg viewBox="0 0 18 18" fill="none">
+        <rect x="1" y="9" width="3" height="7" rx="1" fill="#22d3a0"/>
+        <rect x="6" y="5" width="3" height="11" rx="1" fill="#22d3a0" opacity=".7"/>
+        <rect x="11" y="2" width="3" height="14" rx="1" fill="#22d3a0" opacity=".4"/>
+        <line x1="2.5" y1="7" x2="2.5" y2="9" stroke="#22d3a0" stroke-width="1.5"/>
+        <line x1="7.5" y1="3" x2="7.5" y2="5" stroke="#22d3a0" stroke-width="1.5" opacity=".7"/>
+      </svg>
+    </div>
+    <div class="title-block">
+      <h1>BUDGET OPTIONS SCANNER</h1>
+      <p>Under $15 stocks · Candlestick signals · Robinhood-ready</p>
+    </div>
+    <div class="status-pill" id="statusPill">
+      <div class="dot"></div> DEMO
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="section-title">Configuration</div>
+  <div class="setup-grid">
+    <div class="setup-card">
+      <label>POLYGON.IO (MASSIVE) API KEY</label>
+      <div class="save-row">
+        <input type="password" id="polyKey" placeholder="Paste your key here…"/>
+        <button class="btn-sm" onclick="savePolyKey()">Connect</button>
+      </div>
+      <div class="connected-tag" id="polyTag">✓ Connected — live data active</div>
+      <p class="hint">Free at <a href="https://massive.com" target="_blank">massive.com</a> (formerly polygon.io) · End-of-day candle data</p>
+    </div>
+    <div class="setup-card">
+      <label>NTFY.SH TOPIC (PUSH NOTIFICATIONS)</label>
+      <div class="save-row">
+        <input type="text" id="ntfyTopic" placeholder="e.g. mytrader-signals-7742"/>
+        <button class="btn-sm" onclick="saveNtfy()">Save</button>
+      </div>
+      <div class="connected-tag" id="ntfyTag">✓ Notifications enabled</div>
+      <p class="hint">Free at <a href="https://ntfy.sh" target="_blank">ntfy.sh</a> · Make up any unique topic name · Subscribe in the app</p>
+    </div>
+  </div>
+
+  <!-- SCHEDULER -->
+  <div class="section-title">Auto-scheduler</div>
+  <div class="scheduler-card">
+    <div class="sched-row">
+      <span class="sched-label">AUTO-SCAN</span>
+      <label class="toggle">
+        <input type="checkbox" id="schedToggle" onchange="toggleScheduler()"/>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+      <div class="sched-times">
+        <span class="time-badge active" id="badge-am">09:30 AM</span>
+        <span class="time-badge active" id="badge-pm">02:00 PM</span>
+      </div>
+      <span class="next-scan-label" id="nextScanLabel">Scheduler off</span>
+    </div>
+    <p style="font-size:11px;color:var(--dim);margin-top:10px;font-family:var(--mono);line-height:1.6;">
+      Keep this page open in a browser tab. Scans run automatically at 9:30 AM and 2:00 PM and push signals to your phone via ntfy.sh.
+    </p>
+  </div>
+
+  <!-- SCAN BUTTON -->
+  <div class="scan-btn-wrap">
+    <button class="scan-btn" id="scanBtn" onclick="runScan()">
+      <span>RUN SCAN NOW</span><span class="arrow">→</span>
+    </button>
+  </div>
+
+  <div class="progress-wrap" id="progWrap">
+    <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+    <div class="progress-label" id="progLabel">Initializing…</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resultsSection" style="display:none">
+    <div class="stats-row" id="statsRow"></div>
+    <div class="tabs">
+      <button class="tab active" data-tab="signals" onclick="switchTab('signals')">Signals</button>
+      <button class="tab" data-tab="levels"  onclick="switchTab('levels')">Levels</button>
+      <button class="tab" data-tab="log"     onclick="switchTab('log')">Scan log</button>
+    </div>
+    <div id="tabContent"></div>
+  </div>
+
+  <!-- NOTIFICATION LOG -->
+  <div id="notifSection" style="display:none; margin-top:24px;">
+    <div class="section-title">Notification history</div>
+    <div class="notif-log" id="notifLog"></div>
+  </div>
+
+  <div class="footer">
+    NOT FINANCIAL ADVICE · Options involve significant risk of loss · Always verify signals manually · Never risk more than you can afford to lose · This tool is for informational purposes only
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let polyKey  = localStorage.getItem('poly_key')  || '';
+let ntfyTopic = localStorage.getItem('ntfy_topic') || '';
+let useReal  = false;
+let results  = [];
+let scanLog  = [];
+let activeTab = 'signals';
+let schedulerOn = false;
+let schedTimer  = null;
+let notifHistory = JSON.parse(localStorage.getItem('notif_history') || '[]');
+
+const WATCHLIST = [
+  "SNDL","SOFI","VALE","ITUB","BBD","GRAB","MARA","RIOT","CLSK","WULF",
+  "HIMS","OPEN","SENS","EXPR","ZIM","CLOV","NKLA","ATER","GNUS","GOEV",
+  "VERB","IMPP","IDEX","MVIS","SPWR","NAKD","AULT","FFIE","PRTY","HLBZ"
+];
+
+// ── INIT ──
+window.onload = () => {
+  if (polyKey)  { document.getElementById('polyKey').value = '••••••••••••'; activatePolyKey(); }
+  if (ntfyTopic){ document.getElementById('ntfyTopic').value = ntfyTopic; activateNtfy(); }
+  renderNotifHistory();
+};
+
+// ── API KEY SETUP ──
+function savePolyKey() {
+  const v = document.getElementById('polyKey').value.trim();
+  if (v.length > 8 && v !== '••••••••••••') {
+    polyKey = v;
+    localStorage.setItem('poly_key', v);
+    activatePolyKey();
+    toast('Polygon.io connected — live data active');
+  }
+}
+function activatePolyKey() {
+  useReal = true;
+  document.getElementById('polyTag').style.display = 'block';
+  document.getElementById('statusPill').className = 'status-pill live';
+  document.getElementById('statusPill').innerHTML = '<div class="dot"></div> LIVE';
+}
+function saveNtfy() {
+  const v = document.getElementById('ntfyTopic').value.trim();
+  if (v.length > 2) {
+    ntfyTopic = v;
+    localStorage.setItem('ntfy_topic', v);
+    activateNtfy();
+    sendNotification('Budget Options Scanner connected', 'Your scanner is set up and ready. You will receive signals here.');
+    toast('Notifications enabled — check your ntfy app');
+  }
+}
+function activateNtfy() {
+  document.getElementById('ntfyTag').style.display = 'block';
+}
+
+// ── SCHEDULER ──
+function toggleScheduler() {
+  schedulerOn = document.getElementById('schedToggle').checked;
+  if (schedulerOn) {
+    schedTick();
+    schedTimer = setInterval(schedTick, 30000);
+    toast('Scheduler on — scans at 9:30 AM and 2:00 PM');
+  } else {
+    clearInterval(schedTimer);
+    document.getElementById('nextScanLabel').textContent = 'Scheduler off';
+    toast('Scheduler off');
+  }
+}
+
+function schedTick() {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const amTrigger = h === 9  && m === 30;
+  const pmTrigger = h === 14 && m === 0;
+
+  if (amTrigger || pmTrigger) {
+    const badge = amTrigger ? 'badge-am' : 'badge-pm';
+    document.querySelectorAll('.time-badge').forEach(b => b.classList.remove('active'));
+    document.getElementById(badge).classList.add('active');
+    runScan();
+  }
+
+  const nextAM = new Date(); nextAM.setHours(9,30,0,0);
+  const nextPM = new Date(); nextPM.setHours(14,0,0,0);
+  if (now > nextAM) nextAM.setDate(nextAM.getDate()+1);
+  if (now > nextPM) nextPM.setDate(nextPM.getDate()+1);
+  const next = now < nextAM ? nextAM : (now < nextPM ? nextPM : nextAM);
+  const diff = next - now;
+  const dh = Math.floor(diff/3600000), dm = Math.floor((diff%3600000)/60000);
+  document.getElementById('nextScanLabel').textContent = `Next: ${dh}h ${dm}m`;
+}
+
+// ── FETCH REAL DATA ──
+async function fetchReal(ticker) {
+  try {
+    const today = new Date();
+    const endDate = today.toISOString().split('T')[0];
+    today.setDate(today.getDate() - 14);
+    const startDate = today.toISOString().split('T')[0];
+    const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/range/1/day/${startDate}/${endDate}?adjusted=true&sort=asc&limit=10&apiKey=${polyKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.results || data.results.length < 3) return null;
+    const bars = data.results.slice(-5);
+    const last = bars[bars.length-1];
+    const prev = bars[bars.length-2];
+    const price = last.c;
+    if (price > 15) return null;
+    const change_pct = ((last.c - prev.c)/prev.c)*100;
+    const candles = bars.map(b => {
+      const rng = b.h - b.l || 0.01;
+      return {
+        dir: b.c > b.o ? 'green' : (Math.abs(b.c-b.o) < rng*0.05 ? 'doji' : 'red'),
+        body: Math.min(1, Math.abs(b.c-b.o)/rng),
+        wick: Math.min(1, (b.h - Math.max(b.c,b.o))/rng)
+      };
+    });
+    const last3 = candles.slice(-3);
+    const gc = last3.filter(c=>c.dir==='green').length;
+    const rc = last3.filter(c=>c.dir==='red').length;
+    const trend = gc===3?'bullish':rc===3?'bearish':'neutral';
+    const resistance = parseFloat(Math.max(...bars.map(b=>b.h)).toFixed(2));
+    const support    = parseFloat(Math.min(...bars.map(b=>b.l)).toFixed(2));
+    const broke_r = last.c >= resistance * 0.99;
+    const broke_s = last.c <= support   * 1.01;
+    const ss = Math.min(5, Math.max(1, (trend!=='neutral'?2:1)+(broke_r||broke_s?1:0)+(gc===3||rc===3?2:0)));
+    const vol_trend = bars[bars.length-1].v > bars[bars.length-2].v ? ' with rising volume' : '';
+    return { ticker, price, change_pct, candles, trend, resistance, support,
+      broke_resistance: broke_r, broke_support: broke_s, signal_strength: ss,
+      reason: trend==='bullish' ? `3 green candles${vol_trend} — buyers near $${resistance} resistance`
+             : trend==='bearish'? `3 red candles${vol_trend} — sellers near $${support} support`
+             : `Mixed signals — no 3-candle confirmation yet` };
+  } catch(e) { return null; }
+}
+
+// ── FETCH SIMULATED ──
+async function fetchSim(ticker) {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: `Stock signal for ${ticker}. JSON only, no markdown:
+{"ticker":"${ticker}","price":<2.00-14.99>,"change_pct":<-8 to 8>,"candles":[{"dir":"green"|"red"|"doji","body":<0.3-1>,"wick":<0.2-0.6>},{"dir":"...","body":0.5,"wick":0.3},{"dir":"...","body":0.5,"wick":0.3},{"dir":"...","body":0.5,"wick":0.3},{"dir":"...","body":0.5,"wick":0.3}],"trend":"bullish"|"bearish"|"neutral","resistance":<float>,"support":<float>,"broke_resistance":<bool>,"broke_support":<bool>,"signal_strength":<1-5>,"reason":"<one sentence>"}` }]
+      })
+    });
+    const d = await res.json();
+    const txt = d.content?.[0]?.text || '';
+    return JSON.parse(txt.replace(/```json|```/g,'').trim());
+  } catch(e) { return null; }
+}
+
+// ── MAIN SCAN ──
+async function runScan() {
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>SCANNING…</span>';
+  document.getElementById('progWrap').style.display = 'block';
+  document.getElementById('resultsSection').style.display = 'none';
+
+  const picks = [...WATCHLIST].sort(()=>Math.random()-.5).slice(0, useReal ? 20 : 10);
+  results = []; scanLog = [];
+
+  for (let i=0; i<picks.length; i++) {
+    const t = picks[i];
+    setProgress(Math.round((i/picks.length)*100), `Checking ${t}… (${i+1}/${picks.length})`);
+    const q = useReal ? await fetchReal(t) : await fetchSim(t);
+    if (q && q.price <= 15) {
+      results.push(q);
+      scanLog.push({ ticker: t, status: 'ok',   msg: `$${q.price.toFixed(2)} — ${q.trend} (strength ${q.signal_strength}/5)` });
+    } else {
+      scanLog.push({ ticker: t, status: 'skip', msg: q ? `$${q.price?.toFixed(2)} — over $15` : 'no data' });
+    }
+  }
+
+  setProgress(100, 'Complete');
+  results.sort((a,b) => b.signal_strength - a.signal_strength);
+  activeTab = 'signals';
+
+  setTimeout(() => {
+    document.getElementById('progWrap').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'block';
+    renderStats(); renderTab();
+    sendScanNotification();
+    btn.disabled = false;
+    btn.innerHTML = '<span>SCAN AGAIN</span><span class="arrow">→</span>';
+  }, 400);
+}
+
+function setProgress(pct, label) {
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progLabel').textContent = label;
+}
+
+// ── NOTIFICATIONS ──
+async function sendNotification(title, body) {
+  if (!ntfyTopic) return;
+  try {
+    await fetch(`https://ntfy.sh/${ntfyTopic}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', 'Title': title, 'Priority': 'high', 'Tags': 'chart_increasing' },
+      body: body
+    });
+    addNotifHistory(title, body);
+  } catch(e) { console.log('ntfy error:', e); }
+}
+
+function sendScanNotification() {
+  const bullish = results.filter(r=>r.trend==='bullish');
+  const bearish = results.filter(r=>r.trend==='bearish');
+  const strong  = results.filter(r=>r.signal_strength>=4);
+
+  if (!ntfyTopic) return;
+
+  if (strong.length === 0) {
+    sendNotification('Scanner: No strong signals', `Scanned ${results.length} tickers. No high-strength setups found. Check back later.`);
+    return;
+  }
+
+  const lines = strong.slice(0,5).map(r => {
+    const type = r.trend==='bullish'?'CALL':'PUT';
+    const strike = r.trend==='bullish' ? r.resistance?.toFixed(2) : r.support?.toFixed(2);
+    return `${r.ticker} $${r.price.toFixed(2)} → ${type} $${strike} (${r.signal_strength}/5 ★)`;
+  });
+
+  const now = new Date();
+  const session = now.getHours() < 13 ? 'Morning' : 'Afternoon';
+  sendNotification(
+    `${session} scan: ${strong.length} strong signal${strong.length>1?'s':''}`,
+    `${bullish.length} bullish, ${bearish.length} bearish\n\n${lines.join('\n')}\n\nTarget: +50% exit. Budget $15-20/contract.`
+  );
+}
+
+function addNotifHistory(title, body) {
+  const entry = { time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), title, body };
+  notifHistory.unshift(entry);
+  if (notifHistory.length > 20) notifHistory.pop();
+  localStorage.setItem('notif_history', JSON.stringify(notifHistory));
+  renderNotifHistory();
+}
+
+function renderNotifHistory() {
+  if (!notifHistory.length) return;
+  document.getElementById('notifSection').style.display = 'block';
+  document.getElementById('notifLog').innerHTML = notifHistory.map(n =>
+    `<div class="notif-entry">
+      <div class="notif-time">${n.time}</div>
+      <div class="notif-text"><strong>${n.title}</strong><br>${n.body.replace(/\n/g,'<br>')}</div>
+    </div>`
+  ).join('');
+}
+
+// ── RENDER ──
+function renderStats() {
+  const bullish = results.filter(r=>r.trend==='bullish').length;
+  const bearish = results.filter(r=>r.trend==='bearish').length;
+  const strong  = results.filter(r=>r.signal_strength>=4).length;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><div class="stat-val">${results.length}</div><div class="stat-lbl">Signals found</div></div>
+    <div class="stat"><div class="stat-val g">${bullish}</div><div class="stat-lbl">Bullish setups</div></div>
+    <div class="stat"><div class="stat-val r">${bearish}</div><div class="stat-lbl">Bearish setups</div></div>
+    <div class="stat"><div class="stat-val a">${strong}</div><div class="stat-lbl">High strength (4-5★)</div></div>`;
+}
+
+function switchTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
+  renderTab();
+}
+
+function renderTab() {
+  const el = document.getElementById('tabContent');
+  if (!results.length) { el.innerHTML = '<div class="empty-state">No signals found under $15.<br>Try scanning again or check your API key.</div>'; return; }
+  if (activeTab === 'signals') el.innerHTML = renderSignals();
+  else if (activeTab === 'levels') el.innerHTML = renderLevels();
+  else el.innerHTML = renderLog();
+}
+
+function candleHTML(c) {
+  const bh = Math.round((c.body||0.5)*16)+4;
+  const wh = Math.round((c.wick||0.3)*10)+3;
+  const cls = c.dir==='green'?'g':c.dir==='red'?'r':'d';
+  return `<div class="candle ${cls}"><div class="c-wick" style="height:${wh}px"></div><div class="c-body" style="height:${bh}px"></div><div class="c-wick" style="height:${wh}px"></div></div>`;
+}
+
+function pips(n) {
+  let h='<div class="strength-pips">';
+  for(let i=0;i<5;i++) h+=`<div class="pip ${i<n?'on':''}"></div>`;
+  return h+'</div>';
+}
+
+function renderSignals() {
+  return '<div class="signal-list">' + results.map(r => {
+    const chg = r.change_pct||0;
+    const chgCls = chg>0.3?'up':chg<-0.3?'dn':'flat';
+    const cType = r.trend==='bullish'?'CALL':r.trend==='bearish'?'PUT':null;
+    const strike = r.trend==='bullish' ? (r.resistance||r.price*1.05).toFixed(2) : (r.support||r.price*0.95).toFixed(2);
+    const contractBlock = cType ? `
+      <div class="contract-box">
+        <div class="c-type ${cType.toLowerCase()}">${cType}</div>
+        <div class="c-detail">Strike <strong>$${strike}</strong> · Weekly expiry · Budget <strong>$15–20</strong> · Exit at <strong>+50%</strong></div>
+      </div>` : '';
+    return `
+    <div class="signal-card ${r.trend}">
+      <div class="sig-top">
+        <span class="sig-ticker">${r.ticker}</span>
+        <span class="sig-price">$${(r.price||0).toFixed(2)}</span>
+        <span class="sig-chg ${chgCls}">${chg>0?'+':''}${chg.toFixed(2)}%</span>
+        <span class="sig-dir ${r.trend}">${r.trend==='bullish'?'↑ BULLISH':r.trend==='bearish'?'↓ BEARISH':'→ NEUTRAL'}</span>
+      </div>
+      <div class="candle-row">${(r.candles||[]).map(candleHTML).join('')}</div>
+      <div class="sig-info">
+        Strength: ${pips(r.signal_strength||1)} &nbsp;·&nbsp;
+        Resistance: <span>$${(r.resistance||0).toFixed(2)}</span> &nbsp;·&nbsp;
+        Support: <span>$${(r.support||0).toFixed(2)}</span><br>
+        ${r.reason||''}
+      </div>
+      ${contractBlock}
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderLevels() {
+  return results.map(r => {
+    const res = r.resistance||r.price*1.05, sup = r.support||r.price*0.95;
+    const range = res - sup || 1;
+    const pct = Math.min(95,Math.max(5,Math.round(((r.price-sup)/range)*100)));
+    const cls = r.broke_resistance?'ba':r.broke_support?'bs':'ap';
+    const lbl = r.broke_resistance?'↑ BROKE RESISTANCE':r.broke_support?'↓ BROKE SUPPORT':'NEAR RESISTANCE';
+    return `<div class="level-row">
+      <div class="lv-ticker">${r.ticker}</div>
+      <div class="lv-bar-wrap"><div class="lv-bar ${cls}" style="width:${pct}%"></div></div>
+      <div class="lv-status ${cls}">${lbl}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLog() {
+  return '<div class="log-list">' + scanLog.map(l =>
+    `<div class="log-line ${l.status}">${l.status==='ok'?'✓':'✗'} ${l.ticker.padEnd(6,' ')} ${l.msg}</div>`
+  ).join('') + '</div>';
+}
+
+// ── TOAST ──
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

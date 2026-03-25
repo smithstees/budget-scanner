@@ -11,78 +11,39 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: #0a0c0f; color: #e2e8f0; font-family: 'DM Sans', sans-serif; font-size: 15px; }
 body { min-height: 100vh; padding: 0 0 20px; }
-
 .header { background: #111418; border-bottom: 1px solid #242830; padding: 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 50; }
 .header h1 { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; }
 .header p { font-size: 10px; color: #64748b; margin-top: 1px; }
 .badge { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 20px; border: 1px solid #2e3440; color: #64748b; white-space: nowrap; }
 .badge.live { border-color: #0a6648; color: #22d3a0; }
-
 .page { padding: 14px; max-width: 500px; margin: 0 auto; }
 .hidden { display: none !important; }
-
-/* TAB BUTTONS - large, safe for iOS */
 .tab-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid #242830; border-radius: 10px; overflow: hidden; }
-.tab-row a {
-  flex: 1; text-align: center; padding: 14px 8px;
-  font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
-  color: #64748b; text-decoration: none; background: #111418;
-  border-right: 1px solid #242830; letter-spacing: 0.05em;
-  display: block;
-}
+.tab-row a { flex: 1; text-align: center; padding: 14px 8px; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: #64748b; text-decoration: none; background: #111418; border-right: 1px solid #242830; letter-spacing: 0.05em; display: block; }
 .tab-row a:last-child { border-right: none; }
 .tab-row a.active { background: #0d2e25; color: #22d3a0; }
-
-/* KEY INPUT */
 .key-box { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
 .key-box label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; letter-spacing: 0.08em; display: block; margin-bottom: 8px; }
 .key-box input { width: 100%; background: #181c22; border: 1px solid #2e3440; border-radius: 8px; color: #e2e8f0; font-family: 'Space Mono', monospace; font-size: 12px; padding: 12px; outline: none; margin-bottom: 10px; -webkit-appearance: none; display: block; }
 .key-box input:focus { border-color: #0a6648; }
-.key-box .connect-btn {
-  width: 100%; padding: 14px; background: #0d2e25; border: 1px solid #0a6648;
-  border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace;
-  font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
-  cursor: pointer; display: block; text-align: center;
-  -webkit-appearance: none; touch-action: manipulation;
-}
+.key-box .connect-btn { width: 100%; padding: 14px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; display: block; text-align: center; -webkit-appearance: none; touch-action: manipulation; }
 .key-ok { font-size: 11px; color: #22d3a0; font-family: 'Space Mono', monospace; margin-top: 8px; display: none; }
-
-/* SCAN BUTTON */
-.scan-btn {
-  width: 100%; padding: 18px; background: #0d2e25; border: 1px solid #0a6648;
-  border-radius: 14px; color: #22d3a0; font-family: 'Space Mono', monospace;
-  font-size: 15px; font-weight: 700; letter-spacing: 0.08em;
-  cursor: pointer; display: block; text-align: center; margin-bottom: 14px;
-  -webkit-appearance: none; touch-action: manipulation;
-}
+.scan-btn { width: 100%; padding: 18px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 14px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; cursor: pointer; display: block; text-align: center; margin-bottom: 14px; -webkit-appearance: none; touch-action: manipulation; }
 .scan-btn:disabled { opacity: .4; }
-
-/* PROGRESS */
 .prog { margin-bottom: 14px; display: none; }
 .prog-track { height: 4px; background: #242830; border-radius: 2px; overflow: hidden; }
 .prog-fill { height: 100%; background: #22d3a0; border-radius: 2px; transition: width .3s; width: 0%; }
 .prog-label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; margin-top: 6px; text-align: center; }
-
-/* STATS */
 .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
 .stat { background: #111418; border: 1px solid #242830; border-radius: 10px; padding: 12px; text-align: center; }
 .stat-val { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; }
 .stat-val.g { color: #22d3a0; }
 .stat-val.a { color: #fbbf24; }
 .stat-lbl { font-size: 10px; color: #64748b; margin-top: 3px; font-family: 'Space Mono', monospace; }
-
-/* FILTER TABS */
 .filters { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
 .filters::-webkit-scrollbar { display: none; }
-.filters a {
-  padding: 8px 14px; border-radius: 20px; border: 1px solid #2e3440;
-  color: #64748b; font-family: 'Space Mono', monospace; font-size: 11px;
-  white-space: nowrap; flex-shrink: 0; text-decoration: none; display: block;
-  touch-action: manipulation;
-}
+.filters a { padding: 8px 14px; border-radius: 20px; border: 1px solid #2e3440; color: #64748b; font-family: 'Space Mono', monospace; font-size: 11px; white-space: nowrap; flex-shrink: 0; text-decoration: none; display: block; touch-action: manipulation; }
 .filters a.active { background: #e2e8f0; color: #0a0c0f; border-color: transparent; }
-
-/* SIGNAL CARDS */
 .cards { display: flex; flex-direction: column; gap: 10px; }
 .card { background: #111418; border: 1px solid #242830; border-radius: 14px; overflow: hidden; border-left: 4px solid #2e3440; }
 .card.bull { border-left-color: #22d3a0; }
@@ -98,7 +59,6 @@ body { min-height: 100vh; padding: 0 0 20px; }
 .dir { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 5px; flex-shrink: 0; }
 .dir.bull { background: #0d2e25; color: #22d3a0; border: 1px solid #0a6648; }
 .dir.bear { background: #2d1515; color: #f87171; border: 1px solid #7a2020; }
-
 .prob-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
 .prob-title { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; }
 .prob-pct { font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; }
@@ -114,7 +74,6 @@ body { min-height: 100vh; padding: 0 0 20px; }
 .prob-sub.hi { color: #22d3a0; }
 .prob-sub.md { color: #fbbf24; }
 .prob-sub.lo { color: #f87171; }
-
 .candles { display: flex; gap: 4px; align-items: flex-end; height: 34px; margin-bottom: 8px; }
 .candle { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 .cw { width: 2px; border-radius: 1px; }
@@ -122,24 +81,15 @@ body { min-height: 100vh; padding: 0 0 20px; }
 .candle.g .cb { background: #22d3a0; } .candle.g .cw { background: #0f9972; }
 .candle.r .cb { background: #f87171; } .candle.r .cw { background: #b84040; }
 .candle.d .cb { background: #3a4455; } .candle.d .cw { background: #2a3345; }
-
 .stars { display: inline-flex; gap: 2px; }
 .star { width: 7px; height: 7px; border-radius: 1px; background: #242830; }
 .star.on { background: #fbbf24; }
-
-.card-bot { background: #181c22; padding: 10px 14px; border-top: 1px solid #242830; }
-.contract { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
-.ctype { font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 4px; flex-shrink: 0; }
-.ctype.call { background: #0d2e25; color: #22d3a0; border: 1px solid #0a6648; }
-.ctype.put  { background: #2d1515; color: #f87171; border: 1px solid #7a2020; }
-.cdetail { font-family: 'Space Mono', monospace; font-size: 11px; color: #64748b; }
-.cdetail strong { color: #e2e8f0; }
-.btag { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #2d2208; color: #fbbf24; border: 1px solid #5a4010; flex-shrink: 0; }
-.meta { display: flex; gap: 10px; flex-wrap: wrap; }
+.action-hint { background: #181c22; border-top: 1px solid #242830; padding: 10px 14px; }
+.action-hint p { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; line-height: 1.8; }
+.action-hint strong { color: #fbbf24; }
+.meta-row { background: #181c22; padding: 8px 14px; border-top: 1px solid #1a1f26; display: flex; gap: 10px; flex-wrap: wrap; }
 .meta-i { font-family: 'Space Mono', monospace; font-size: 10px; color: #3a4455; }
 .meta-i span { color: #64748b; }
-
-/* SETTINGS PAGE */
 .settings-section { margin-bottom: 20px; }
 .settings-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #64748b; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #242830; }
 .settings-box { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
@@ -152,7 +102,6 @@ body { min-height: 100vh; padding: 0 0 20px; }
 .log-line.ok { color: #22d3a0; }
 .log-line.skip { color: #3a4455; }
 .hint { font-size: 11px; color: #3a4455; line-height: 1.7; font-family: 'Space Mono', monospace; }
-
 .empty { text-align: center; padding: 40px 20px; color: #64748b; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 2.4; }
 </style>
 </head>
@@ -161,12 +110,11 @@ body { min-height: 100vh; padding: 0 0 20px; }
 <div class="header">
   <div>
     <h1>LIVE SCANNER</h1>
-    <p>Under $25 contracts · No stock price cap · 50% target</p>
+    <p>3-candle confirm · 50% target · find contract in broker</p>
   </div>
   <div class="badge" id="badge">DEMO</div>
 </div>
 
-<!-- TAB NAVIGATION - using anchor tags for iOS compatibility -->
 <div style="padding: 12px 14px 0; max-width: 500px; margin: 0 auto;">
   <div class="tab-row">
     <a href="#" id="tabScan" class="active" onclick="showTab('scan'); return false;">SCAN</a>
@@ -174,14 +122,12 @@ body { min-height: 100vh; padding: 0 0 20px; }
   </div>
 </div>
 
-<!-- SCAN PAGE -->
 <div class="page" id="pageScan">
-
   <div class="key-box">
     <label>MASSIVE.COM API KEY</label>
     <input type="password" id="keyInput" placeholder="Paste your Massive.com API key here"/>
-    <button class="connect-btn" id="connectBtn" onclick="saveKey()">CONNECT →</button>
-    <div class="key-ok" id="keyOk">✓ Connected to live data</div>
+    <button class="connect-btn" onclick="saveKey()">CONNECT →</button>
+    <div class="key-ok" id="keyOk">✓ Connected — candle data (free tier)</div>
   </div>
 
   <button class="scan-btn" id="scanBtn" onclick="runScan()">SCAN NOW →</button>
@@ -193,11 +139,11 @@ body { min-height: 100vh; padding: 0 0 20px; }
 
   <div id="resultsArea" style="display:none">
     <div class="stats" id="statsRow"></div>
-    <div class="filters" id="filterRow">
+    <div class="filters">
       <a href="#" class="active" data-f="all"     onclick="setFilter('all');return false;">All</a>
       <a href="#" data-f="bullish"                 onclick="setFilter('bullish');return false;">↑ Bullish</a>
       <a href="#" data-f="bearish"                 onclick="setFilter('bearish');return false;">↓ Bearish</a>
-      <a href="#" data-f="strong"                  onclick="setFilter('strong');return false;">★ 65%+ prob</a>
+      <a href="#" data-f="strong"                  onclick="setFilter('strong');return false;">★ 65%+</a>
     </div>
     <div class="cards" id="cardList"></div>
   </div>
@@ -207,12 +153,9 @@ body { min-height: 100vh; padding: 0 0 20px; }
     Check Settings → Scan Log to see why.<br><br>
     Best times: Tue–Thu · 10:15–11:30 AM ET
   </div>
-
 </div>
 
-<!-- SETTINGS PAGE -->
 <div class="page hidden" id="pageSettings">
-
   <div class="settings-section">
     <div class="settings-title">API Key</div>
     <div class="settings-box">
@@ -226,16 +169,27 @@ body { min-height: 100vh; padding: 0 0 20px; }
   <div class="settings-section">
     <div class="settings-title">Your Preferences</div>
     <div class="settings-box">
-      <div class="prow"><span class="pname">Contract budget</span><span class="pval g">Up to $25/contract</span></div>
-      <div class="prow"><span class="pname">Stock price cap</span><span class="pval g">None — removed ✓</span></div>
+      <div class="prow"><span class="pname">Data used</span><span class="pval g">Candles only (free tier)</span></div>
+      <div class="prow"><span class="pname">Contract budget</span><span class="pval">$15–25 (find in broker)</span></div>
       <div class="prow"><span class="pname">Profit target</span><span class="pval">+50%</span></div>
       <div class="prow"><span class="pname">Stop loss</span><span class="pval">-50%</span></div>
       <div class="prow"><span class="pname">Expiry window</span><span class="pval">2–4 weeks</span></div>
-      <div class="prow"><span class="pname">Min open interest</span><span class="pval">50</span></div>
-      <div class="prow"><span class="pname">Max IV rank</span><span class="pval">70%</span></div>
-      <div class="prow"><span class="pname">Min rel. volume</span><span class="pval">0.5x avg</span></div>
+      <div class="prow"><span class="pname">Signal method</span><span class="pval">3-candle confirm</span></div>
       <div class="prow"><span class="pname">Tickers scanned</span><span class="pval">70</span></div>
-      <div class="prow"><span class="pname">Data provider</span><span class="pval g">Massive.com ✓</span></div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">How to use signals</div>
+    <div class="settings-box">
+      <div class="hint">
+        1. Run scan → find a ★ 65%+ signal<br>
+        2. Note the ticker + direction (BULL / BEAR)<br>
+        3. Open your broker → go to that ticker's options chain<br>
+        4. Pick a CALL (bull) or PUT (bear) expiring 2–4 weeks out<br>
+        5. Find a contract priced $0.15–$0.25 (= $15–$25/contract)<br>
+        6. Check open interest &gt; 50 before entering
+      </div>
     </div>
   </div>
 
@@ -250,23 +204,15 @@ body { min-height: 100vh; padding: 0 0 20px; }
     <div class="settings-title">Add to Home Screen</div>
     <div class="settings-box">
       <div class="hint">
-        In Safari tap the Share button at the bottom (box with arrow pointing up).<br><br>
+        In Safari tap the Share button (box with arrow up).<br><br>
         Tap "Add to Home Screen" → name it "Live Scanner" → tap Add.
       </div>
     </div>
   </div>
-
 </div>
 
 <script>
-// ── BASE URL ──────────────────────────────────────────────────────────────────
 const BASE = 'https://api.massive.com';
-
-const PARAMS = {
-  maxAsk:0.25, minAsk:0.01,
-  minOI:50, maxIV:70, minRelVol:0.5,
-  minDays:10, maxDays:35
-};
 
 const WATCHLIST = [
   "SNDL","SOFI","VALE","ITUB","BBD","GRAB","MARA","RIOT","CLSK","WULF",
@@ -301,71 +247,36 @@ function showTab(t) {
 function saveKey() {
   var v = document.getElementById('keyInput').value.trim();
   if (v.length > 8) {
-    apiKey = v;
-    localStorage.setItem('poly_key', v);
+    apiKey = v; localStorage.setItem('poly_key', v);
     document.getElementById('badge').className = 'badge live';
     document.getElementById('badge').textContent = 'LIVE';
     document.getElementById('keyOk').style.display = 'block';
     document.getElementById('keyInput').placeholder = '✓ Key saved';
     alert('Connected! Tap SCAN NOW to start.');
-  } else {
-    alert('Please paste your full API key first.');
-  }
+  } else { alert('Please paste your full API key first.'); }
 }
 
 function saveKeyFromSettings() {
   var v = document.getElementById('settingsKeyInput').value.trim();
   if (v.length > 8) {
-    apiKey = v;
-    localStorage.setItem('poly_key', v);
+    apiKey = v; localStorage.setItem('poly_key', v);
     document.getElementById('badge').className = 'badge live';
     document.getElementById('badge').textContent = 'LIVE';
     document.getElementById('settingsKeyOk').style.display = 'block';
     alert('Connected! Tap SCAN to start scanning.');
-  } else {
-    alert('Please paste your full API key first.');
-  }
+  } else { alert('Please paste your full API key first.'); }
 }
 
-async function pget(url) {
-  try { var r = await fetch(url); return r.json(); }
-  catch(e) { return {}; }
-}
-
-async function fetchSnapshot(t) {
-  var d = await pget(BASE + '/v2/snapshot/locale/us/markets/stocks/tickers/' + t + '?apiKey=' + apiKey);
-  return d.ticker || null;
-}
-
-async function fetchCandles(t) {
-  var e = new Date(), s = new Date();
-  s.setDate(s.getDate() - 20);
-  var fmt = function(d) { return d.toISOString().split('T')[0]; };
-  var d = await pget(BASE + '/v2/aggs/ticker/' + t + '/range/1/day/' + fmt(s) + '/' + fmt(e) + '?adjusted=true&sort=asc&limit=15&apiKey=' + apiKey);
-  return d.results || [];
-}
-
-async function fetchOptions(t, strike, type) {
-  var today = new Date();
-  var minE = new Date(); minE.setDate(today.getDate() + PARAMS.minDays);
-  var maxE = new Date(); maxE.setDate(today.getDate() + PARAMS.maxDays);
-  var fmt = function(d) { return d.toISOString().split('T')[0]; };
-  var d = await pget(
-    BASE + '/v3/snapshot/options/' + t +
-    '?strike_price_gte=' + (strike * 0.80).toFixed(2) +
-    '&strike_price_lte=' + (strike * 1.25).toFixed(2) +
-    '&contract_type=' + type +
-    '&expiration_date_gte=' + fmt(minE) +
-    '&expiration_date_lte=' + fmt(maxE) +
-    '&limit=30&apiKey=' + apiKey
-  );
-  var res = (d.results || []).filter(function(o) {
-    var ask = o.day && o.day.close;
-    return ask && ask >= PARAMS.minAsk && ask <= PARAMS.maxAsk;
-  });
-  if (!res.length) return null;
-  res.sort(function(a,b) { return (b.open_interest||0) - (a.open_interest||0); });
-  return res[0];
+async function fetchCandles(ticker) {
+  try {
+    var end = new Date();
+    var start = new Date(); start.setDate(start.getDate() - 25);
+    var fmt = function(d) { return d.toISOString().split('T')[0]; };
+    var url = BASE + '/v2/aggs/ticker/' + ticker + '/range/1/day/' + fmt(start) + '/' + fmt(end) + '?adjusted=true&sort=asc&limit=20&apiKey=' + apiKey;
+    var r = await fetch(url);
+    var d = await r.json();
+    return d.results || [];
+  } catch(e) { return []; }
 }
 
 function cDir(b) {
@@ -377,103 +288,84 @@ function cDir(b) {
 
 function calcProb(sig) {
   var s = 20, factors = [];
-  if (sig.relVol >= 2.5)      { s += 25; factors.push('very strong volume'); }
-  else if (sig.relVol >= 2.0) { s += 20; factors.push('strong volume 2x+'); }
-  else if (sig.relVol >= 1.5) { s += 15; factors.push('above avg volume'); }
+  if (sig.relVol >= 2.5)      { s += 25; factors.push('very strong vol'); }
+  else if (sig.relVol >= 2.0) { s += 20; factors.push('strong vol 2x+'); }
+  else if (sig.relVol >= 1.5) { s += 15; factors.push('above avg vol'); }
   else if (sig.relVol >= 1.0) { s += 8; }
   else                        { s -= 5; }
   if (sig.volUp)      { s += 12; factors.push('rising volume'); }
   if (sig.brokeLevel) { s += 15; factors.push('broke key level'); }
-  if (sig.iv !== null) {
-    if (sig.iv <= 25)      { s += 12; factors.push('low IV'); }
-    else if (sig.iv <= 40) { s += 7; }
-    else if (sig.iv <= 60) { s += 2; }
-    else                   { s -= 10; }
-  } else { s += 3; }
-  if (sig.oi >= 1000)    { s += 8; factors.push('high liquidity'); }
-  else if (sig.oi >= 500){ s += 5; }
-  else if (sig.oi >= 50) { s += 2; }
-  if (sig.trend === 'bullish' && sig.chg > 3)    { s += 8; factors.push('strong momentum'); }
+  if (sig.trend === 'bullish' && sig.chg > 3)      { s += 8; factors.push('strong momentum'); }
   else if (sig.trend === 'bullish' && sig.chg > 1) { s += 4; }
-  if (sig.trend === 'bearish' && sig.chg < -3)   { s += 8; factors.push('strong downside'); }
-  else if (sig.trend === 'bearish' && sig.chg < -1) { s += 4; }
-  if (sig.spread && sig.spread > 60) s -= 10;
+  if (sig.trend === 'bearish' && sig.chg < -3)     { s += 8; factors.push('strong downside'); }
+  else if (sig.trend === 'bearish' && sig.chg < -1){ s += 4; }
+  if (sig.atrPct > 2 && sig.atrPct < 8) { s += 5; factors.push('good volatility'); }
+  else if (sig.atrPct >= 8) { s -= 8; }
   var prob = Math.min(95, Math.max(5, s));
   return { prob: prob, tier: prob >= 65 ? 'hi' : prob >= 40 ? 'md' : 'lo', factors: factors };
 }
 
 async function analyze(ticker) {
   try {
-    var snap = await fetchSnapshot(ticker);
     var bars = await fetchCandles(ticker);
-    if (!snap || bars.length < 4) {
-      scanLog.push({ t: ticker, ok: false, msg: 'no data' });
+    if (bars.length < 6) {
+      scanLog.push({ t: ticker, ok: false, msg: 'not enough bars (' + bars.length + ')' });
       return null;
     }
-    var price = (snap.day && snap.day.c) || (snap.lastTrade && snap.lastTrade.p) || 0;
-    var prev = (snap.prevDay && snap.prevDay.c) || price;
-    if (!price) { scanLog.push({ t: ticker, ok: false, msg: 'no price' }); return null; }
-
-    var chg = Math.round(((price - prev) / prev) * 10000) / 100;
-    var vol = (snap.day && snap.day.v) || 0;
+    var last = bars[bars.length - 1];
+    var prev = bars[bars.length - 2];
+    var price = last.c;
+    var chg = Math.round(((last.c - prev.c) / prev.c) * 10000) / 100;
+    var vol = last.v || 0;
+    var volBars = bars.slice(-11, -1).map(function(b){ return b.v || 0; });
+    var avgVol = volBars.length ? volBars.reduce(function(a,b){return a+b;},0) / volBars.length : 1;
+    var relVol = Math.round((vol / avgVol) * 10) / 10;
+    if (relVol < 0.5) {
+      scanLog.push({ t: ticker, ok: false, msg: 'low vol ' + relVol + 'x' });
+      return null;
+    }
     var last5 = bars.slice(-5);
     var cdata = last5.map(function(b) {
       return {
         dir: cDir(b),
         body: Math.min(1, Math.abs(b.c - b.o) / (b.h - b.l || 0.01)),
-        wick: Math.min(1, (b.h - Math.max(b.c, b.o)) / (b.h - b.l || 0.01))
+        wick: Math.min(1, (b.h - Math.max(b.c, b.o)) / (b.h - b.l || 0.01)),
+        v: b.v || 0
       };
     });
-    var l3 = cdata.slice(-3).map(function(c) { return c.dir; });
-    var gc = l3.filter(function(d) { return d === 'g'; }).length;
-    var rc = l3.filter(function(d) { return d === 'r'; }).length;
+    var l3 = cdata.slice(-3).map(function(c){ return c.dir; });
+    var gc = l3.filter(function(d){ return d === 'g'; }).length;
+    var rc = l3.filter(function(d){ return d === 'r'; }).length;
     if (gc < 3 && rc < 3) {
       scanLog.push({ t: ticker, ok: false, msg: 'no 3-candle (' + gc + 'g ' + rc + 'r)' });
       return null;
     }
     var trend = gc === 3 ? 'bullish' : 'bearish';
-    var vols = bars.slice(-11, -1).map(function(b) { return b.v || 0; });
-    var avgVol = vols.length ? vols.reduce(function(a,b){return a+b;},0) / vols.length : 1;
-    var relVol = Math.round((vol / avgVol) * 10) / 10;
-    if (relVol < PARAMS.minRelVol) {
-      scanLog.push({ t: ticker, ok: false, msg: 'low vol ' + relVol + 'x' });
-      return null;
-    }
-    var volUp = (last5[4] && last5[4].v || 0) > (last5[3] && last5[3].v || 0) &&
-                (last5[3] && last5[3].v || 0) > (last5[2] && last5[2].v || 0);
+    var volUp = cdata[4].v > cdata[3].v && cdata[3].v > cdata[2].v;
     var res = Math.round(Math.max.apply(null, last5.map(function(b){return b.h;})) * 100) / 100;
     var sup = Math.round(Math.min.apply(null, last5.map(function(b){return b.l;})) * 100) / 100;
     var brokeLevel = trend === 'bullish' ? price >= res * 0.985 : price <= sup * 1.015;
-    var tStrike = trend === 'bullish' ? res : sup;
-    var cType = trend === 'bullish' ? 'call' : 'put';
-    var opt = await fetchOptions(ticker, tStrike, cType);
-    if (!opt) {
-      scanLog.push({ t: ticker, ok: false, msg: 'no contract under $' + (PARAMS.maxAsk * 100) });
-      return null;
-    }
-    var ask = opt.day && opt.day.close;
-    var bid = opt.day && opt.day.open;
-    var oi = opt.open_interest || 0;
-    var iv = opt.implied_volatility ? Math.round(opt.implied_volatility * 100) : null;
-    var expiry = opt.details && opt.details.expiration_date;
-    var strike = Math.round(((opt.details && opt.details.strike_price) || tStrike) * 100) / 100;
-    var spread = bid && ask && ask > 0 ? Math.round(((ask - bid) / ask) * 100) : null;
-    if (oi > 0 && oi < PARAMS.minOI) { scanLog.push({ t: ticker, ok: false, msg: 'low OI ' + oi }); return null; }
-    if (iv && iv > PARAMS.maxIV) { scanLog.push({ t: ticker, ok: false, msg: 'IV ' + iv + '% too high' }); return null; }
+    var atrs = last5.slice(1).map(function(b, i) {
+      var p = last5[i];
+      return Math.max(b.h - b.l, Math.abs(b.h - p.c), Math.abs(b.l - p.c));
+    });
+    var atr = atrs.reduce(function(a,b){return a+b;},0) / atrs.length;
+    var atrPct = Math.round((atr / price) * 1000) / 10;
     var sig = {
       ticker: ticker, price: Math.round(price * 100) / 100, chg: chg,
       trend: trend, cdata: cdata, relVol: relVol, volUp: volUp,
-      res: res, sup: sup, brokeLevel: brokeLevel, cType: cType,
-      strike: strike, expiry: expiry, iv: iv, oi: oi,
-      ask: ask ? Math.round(ask * 100) / 100 : null, spread: spread,
+      res: res, sup: sup, brokeLevel: brokeLevel, atrPct: atrPct,
       strength: Math.min(5, Math.max(1, 2 + (volUp?1:0) + (relVol>=1.5?1:0) + (brokeLevel?1:0)))
     };
     var p = calcProb(sig);
     sig.prob = p.prob; sig.tier = p.tier; sig.factors = p.factors;
-    scanLog.push({ t: ticker, ok: true, msg: '$' + sig.price + ' ' + trend + ' ' + sig.prob + '% ask $' + (ask ? ask.toFixed(2) : '?') });
+    sig.action = trend === 'bullish'
+      ? 'CALL near $' + res.toFixed(2) + ' strike · 2–4 wk expiry · OI > 50'
+      : 'PUT near $' + sup.toFixed(2) + ' strike · 2–4 wk expiry · OI > 50';
+    scanLog.push({ t: ticker, ok: true, msg: '$' + sig.price + ' ' + trend + ' ' + sig.prob + '% vol ' + relVol + 'x' });
     return sig;
   } catch(e) {
-    scanLog.push({ t: ticker, ok: false, msg: 'error: ' + e.message });
+    scanLog.push({ t: ticker, ok: false, msg: 'err: ' + e.message });
     return null;
   }
 }
@@ -518,7 +410,7 @@ function renderCards() {
   if (filter === 'bullish') list = results.filter(function(r){ return r.trend === 'bullish'; });
   if (filter === 'bearish') list = results.filter(function(r){ return r.trend === 'bearish'; });
   if (filter === 'strong')  list = results.filter(function(r){ return r.prob >= 65; });
-  var bull = results.filter(function(r){ return r.trend === 'bullish'; }).length;
+  var bull   = results.filter(function(r){ return r.trend === 'bullish'; }).length;
   var strong = results.filter(function(r){ return r.prob >= 65; }).length;
   document.getElementById('statsRow').innerHTML =
     '<div class="stat"><div class="stat-val">' + results.length + '</div><div class="stat-lbl">Signals</div></div>' +
@@ -535,10 +427,9 @@ function renderCards() {
       var bh = Math.round((c.body||0.5)*16)+4, wh = Math.round((c.wick||0.3)*10)+3;
       return '<div class="candle ' + c.dir + '"><div class="cw" style="height:'+wh+'px"></div><div class="cb" style="height:'+bh+'px"></div><div class="cw" style="height:'+wh+'px"></div></div>';
     }).join('');
-    var sHTML = '<div class="stars">' + [1,2,3,4,5].map(function(i){ return '<div class="star ' + (i <= r.strength ? 'on' : '') + '"></div>'; }).join('') + '</div>';
+    var sHTML = '<div class="stars">' + [1,2,3,4,5].map(function(i){ return '<div class="star'+(i<=r.strength?' on':'')+'"></div>'; }).join('') + '</div>';
     var probLbl = r.tier === 'hi' ? '✓ Strong setup' : r.tier === 'md' ? '~ Moderate setup' : '✗ Weak setup';
-    var costPer = r.ask ? Math.round(r.ask * 100) : null;
-    return '<div class="card ' + (r.trend === 'bullish' ? 'bull' : 'bear') + '">' +
+    return '<div class="card ' + (r.trend==='bullish'?'bull':'bear') + '">' +
       '<div class="card-top">' +
         '<div class="card-head">' +
           '<div><div class="ticker">' + r.ticker + '</div><div class="price">$' + r.price.toFixed(2) + '</div></div>' +
@@ -551,18 +442,12 @@ function renderCards() {
         '<div class="candles">' + cHTML + '</div>' +
         sHTML +
       '</div>' +
-      '<div class="card-bot">' +
-        '<div class="contract">' +
-          '<div class="ctype ' + r.cType + '">' + r.cType.toUpperCase() + '</div>' +
-          '<div class="cdetail">Strike <strong>$' + r.strike.toFixed(2) + '</strong> · ' + (r.expiry ? 'exp <strong>' + r.expiry + '</strong>' : '2-4 wk expiry') + '</div>' +
-          (costPer ? '<span class="btag">$' + costPer + '/contract</span>' : '') +
-        '</div>' +
-        '<div class="meta">' +
-          (r.ask ? '<div class="meta-i">ask <span>$' + r.ask.toFixed(2) + '</span></div>' : '') +
-          (r.oi  ? '<div class="meta-i">OI <span>' + r.oi.toLocaleString() + '</span></div>' : '') +
-          (r.iv  ? '<div class="meta-i">IV <span>' + r.iv + '%</span></div>' : '') +
-          '<div class="meta-i">vol <span>' + r.relVol + 'x avg</span></div>' +
-        '</div>' +
+      '<div class="action-hint"><p><strong>→</strong> ' + r.action + '</p></div>' +
+      '<div class="meta-row">' +
+        '<div class="meta-i">vol <span>' + r.relVol + 'x</span></div>' +
+        '<div class="meta-i">ATR <span>' + r.atrPct + '%</span></div>' +
+        (r.brokeLevel ? '<div class="meta-i"><span>⚡ broke level</span></div>' : '') +
+        (r.volUp ? '<div class="meta-i"><span>📈 vol rising</span></div>' : '') +
       '</div>' +
     '</div>';
   }).join('');
@@ -572,7 +457,7 @@ function renderLog() {
   var el = document.getElementById('scanLogBox');
   if (!scanLog.length) { el.innerHTML = '<div class="hint">Run a scan first to see the log.</div>'; return; }
   el.innerHTML = scanLog.map(function(l) {
-    return '<div class="log-line ' + (l.ok ? 'ok' : 'skip') + '">' + (l.ok ? '✓' : '✗') + ' ' + l.t + '  ' + l.msg + '</div>';
+    return '<div class="log-line ' + (l.ok?'ok':'skip') + '">' + (l.ok?'✓':'✗') + ' ' + l.t + '  ' + l.msg + '</div>';
   }).join('');
 }
 </script>

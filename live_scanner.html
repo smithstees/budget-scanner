@@ -178,8 +178,8 @@ body { min-height: 100vh; padding: 0 0 20px; }
 <div class="page" id="pageScan">
 
   <div class="key-box">
-    <label>POLYGON.IO API KEY</label>
-    <input type="password" id="keyInput" placeholder="Paste your Polygon / Massive API key here"/>
+    <label>MASSIVE.COM API KEY</label>
+    <input type="password" id="keyInput" placeholder="Paste your Massive.com API key here"/>
     <button class="connect-btn" id="connectBtn" onclick="saveKey()">CONNECT →</button>
     <div class="key-ok" id="keyOk">✓ Connected to live data</div>
   </div>
@@ -216,7 +216,7 @@ body { min-height: 100vh; padding: 0 0 20px; }
   <div class="settings-section">
     <div class="settings-title">API Key</div>
     <div class="settings-box">
-      <label style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;display:block;margin-bottom:8px;">POLYGON.IO / MASSIVE KEY</label>
+      <label style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;display:block;margin-bottom:8px;">MASSIVE.COM KEY</label>
       <input type="password" id="settingsKeyInput" placeholder="Paste key here…" style="width:100%;background:#181c22;border:1px solid #2e3440;border-radius:8px;color:#e2e8f0;font-family:'Space Mono',monospace;font-size:12px;padding:12px;outline:none;-webkit-appearance:none;display:block;margin-bottom:10px;"/>
       <button onclick="saveKeyFromSettings()" style="width:100%;padding:13px;background:#0d2e25;border:1px solid #0a6648;border-radius:8px;color:#22d3a0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;display:block;">SAVE & CONNECT</button>
       <div id="settingsKeyOk" style="font-size:11px;color:#22d3a0;font-family:'Space Mono',monospace;margin-top:8px;display:none;">✓ Connected</div>
@@ -235,6 +235,7 @@ body { min-height: 100vh; padding: 0 0 20px; }
       <div class="prow"><span class="pname">Max IV rank</span><span class="pval">70%</span></div>
       <div class="prow"><span class="pname">Min rel. volume</span><span class="pval">0.5x avg</span></div>
       <div class="prow"><span class="pname">Tickers scanned</span><span class="pval">70</span></div>
+      <div class="prow"><span class="pname">Data provider</span><span class="pval g">Massive.com ✓</span></div>
     </div>
   </div>
 
@@ -258,6 +259,9 @@ body { min-height: 100vh; padding: 0 0 20px; }
 </div>
 
 <script>
+// ── BASE URL ──────────────────────────────────────────────────────────────────
+const BASE = 'https://api.massive.com';
+
 const PARAMS = {
   maxAsk:0.25, minAsk:0.01,
   minOI:50, maxIV:70, minRelVol:0.5,
@@ -329,7 +333,7 @@ async function pget(url) {
 }
 
 async function fetchSnapshot(t) {
-  var d = await pget('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/' + t + '?apiKey=' + apiKey);
+  var d = await pget(BASE + '/v2/snapshot/locale/us/markets/stocks/tickers/' + t + '?apiKey=' + apiKey);
   return d.ticker || null;
 }
 
@@ -337,7 +341,7 @@ async function fetchCandles(t) {
   var e = new Date(), s = new Date();
   s.setDate(s.getDate() - 20);
   var fmt = function(d) { return d.toISOString().split('T')[0]; };
-  var d = await pget('https://api.polygon.io/v2/aggs/ticker/' + t + '/range/1/day/' + fmt(s) + '/' + fmt(e) + '?adjusted=true&sort=asc&limit=15&apiKey=' + apiKey);
+  var d = await pget(BASE + '/v2/aggs/ticker/' + t + '/range/1/day/' + fmt(s) + '/' + fmt(e) + '?adjusted=true&sort=asc&limit=15&apiKey=' + apiKey);
   return d.results || [];
 }
 
@@ -347,7 +351,7 @@ async function fetchOptions(t, strike, type) {
   var maxE = new Date(); maxE.setDate(today.getDate() + PARAMS.maxDays);
   var fmt = function(d) { return d.toISOString().split('T')[0]; };
   var d = await pget(
-    'https://api.polygon.io/v3/snapshot/options/' + t +
+    BASE + '/v3/snapshot/options/' + t +
     '?strike_price_gte=' + (strike * 0.80).toFixed(2) +
     '&strike_price_lte=' + (strike * 1.25).toFixed(2) +
     '&contract_type=' + type +

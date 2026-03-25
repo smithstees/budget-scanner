@@ -180,12 +180,13 @@ body{min-height:100vh;padding-bottom:calc(80px + var(--safe-bot));}
 <div id="mainPage">
   <div class="shell">
 
-    <div class="key-card" id="keyCard" style="display:none">
+    <div class="key-card" id="keyCard">
       <div class="key-label">POLYGON.IO API KEY</div>
       <div class="key-row">
-        <input class="key-input" id="keyInput" type="password" placeholder="Paste your API key…"/>
-        <button class="save-btn" onclick="saveKey()">Save</button>
+        <input class="key-input" id="keyInput" type="password" placeholder="Paste your Polygon/Massive API key…"/>
+        <button class="save-btn" onclick="saveKey()">Connect</button>
       </div>
+      <div id="keyOk" style="font-size:11px;color:var(--green);font-family:var(--mono);margin-top:6px;display:none;">✓ Connected to live data</div>
     </div>
 
     <button class="scan-btn" id="scanBtn" onclick="runScan()">
@@ -303,14 +304,16 @@ let apiKey = localStorage.getItem('poly_key') || '';
 let results = [], filter = 'all', scanLog = [];
 
 window.onload = () => {
-  if (apiKey) activateKey();
-  else document.getElementById('keyCard').style.display = 'block';
+  if (apiKey) {
+    activateKey();
+  }
 };
 
 function activateKey() {
   document.getElementById('liveBadge').className = 'live-badge on';
   document.getElementById('liveBadge').innerHTML = '<div class="live-dot"></div> LIVE';
-  document.getElementById('keyCard').style.display = 'none';
+  document.getElementById('keyOk').style.display = 'block';
+  document.getElementById('keyInput').placeholder = '✓ Key saved — paste new key to update';
 }
 function saveKey() {
   const v = document.getElementById('keyInput').value.trim();
@@ -325,8 +328,8 @@ function saveKeySettings() {
   }
 }
 function showPage(p) {
-  document.getElementById('mainPage').style.display     = p==='main'?'block':'none';
-  document.getElementById('settingsPage').style.display = p==='settings'?'block':'none';
+  document.getElementById('mainPage').style.display     = p==='main'    ? 'block' : 'none';
+  document.getElementById('settingsPage').style.display = p==='settings' ? 'block' : 'none';
   document.getElementById('navScan').classList.toggle('active',     p==='main');
   document.getElementById('navSettings').classList.toggle('active', p==='settings');
   if (p==='settings') renderScanLog();

@@ -9,185 +9,216 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: #0a0c0f; color: #e2e8f0; font-family: 'DM Sans', sans-serif; font-size: 15px; }
+html { background: #f0f2f5; color: #1a1f2e; font-family: 'DM Sans', sans-serif; font-size: 15px; }
 body { min-height: 100vh; padding: 0 0 20px; }
-.header { background: #111418; border-bottom: 1px solid #242830; padding: 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 50; }
-.header h1 { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; }
+
+/* ── HEADER ── */
+.header { background: #ffffff; border-bottom: 2px solid #e2e6ed; padding: 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.header h1 { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: #1a1f2e; }
 .header p { font-size: 10px; color: #64748b; margin-top: 1px; }
-.badge { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 20px; border: 1px solid #2e3440; color: #64748b; white-space: nowrap; }
-.badge.live { border-color: #0a6648; color: #22d3a0; }
+.badge { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 20px; border: 1px solid #cbd5e1; color: #94a3b8; white-space: nowrap; }
+.badge.live { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+
+/* ── LAYOUT ── */
 .page { padding: 14px; max-width: 500px; margin: 0 auto; }
 .hidden { display: none !important; }
-.tab-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid #242830; border-radius: 10px; overflow: hidden; }
-.tab-row a { flex: 1; text-align: center; padding: 12px 4px; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; color: #64748b; text-decoration: none; background: #111418; border-right: 1px solid #242830; letter-spacing: 0.04em; display: block; }
+
+/* ── TABS ── */
+.tab-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid #e2e6ed; border-radius: 10px; overflow: hidden; background: #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.tab-row a { flex: 1; text-align: center; padding: 12px 4px; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; color: #94a3b8; text-decoration: none; background: #ffffff; border-right: 1px solid #e2e6ed; letter-spacing: 0.04em; display: block; }
 .tab-row a:last-child { border-right: none; }
-.tab-row a.active { background: #0d2e25; color: #22d3a0; }
-.key-box { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.tab-row a.active { background: #1a1f2e; color: #ffffff; }
+
+/* ── KEY BOX ── */
+.key-box { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
 .key-box label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; letter-spacing: 0.08em; display: block; margin-bottom: 8px; }
-.key-box input { width: 100%; background: #181c22; border: 1px solid #2e3440; border-radius: 8px; color: #e2e8f0; font-family: 'Space Mono', monospace; font-size: 12px; padding: 12px; outline: none; margin-bottom: 10px; -webkit-appearance: none; display: block; }
-.key-box input:focus { border-color: #0a6648; }
-.key-box .connect-btn { width: 100%; padding: 14px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; display: block; text-align: center; -webkit-appearance: none; touch-action: manipulation; }
-.key-ok { font-size: 11px; color: #22d3a0; font-family: 'Space Mono', monospace; margin-top: 8px; display: none; }
-.scan-btn { width: 100%; padding: 18px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 14px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; cursor: pointer; display: block; text-align: center; margin-bottom: 14px; -webkit-appearance: none; touch-action: manipulation; }
+.key-box input { width: 100%; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; color: #1a1f2e; font-family: 'Space Mono', monospace; font-size: 12px; padding: 12px; outline: none; margin-bottom: 10px; -webkit-appearance: none; display: block; }
+.key-box input:focus { border-color: #16a34a; }
+.key-box .connect-btn { width: 100%; padding: 14px; background: #1a1f2e; border: none; border-radius: 8px; color: #ffffff; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; cursor: pointer; display: block; text-align: center; -webkit-appearance: none; touch-action: manipulation; }
+.key-ok { font-size: 11px; color: #16a34a; font-family: 'Space Mono', monospace; margin-top: 8px; display: none; font-weight: 700; }
+
+/* ── SCAN BUTTON ── */
+.scan-btn { width: 100%; padding: 18px; background: #1a1f2e; border: none; border-radius: 14px; color: #ffffff; font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; cursor: pointer; display: block; text-align: center; margin-bottom: 14px; -webkit-appearance: none; touch-action: manipulation; box-shadow: 0 2px 8px rgba(26,31,46,0.2); }
 .scan-btn:disabled { opacity: .4; }
+
+/* ── PROGRESS ── */
 .prog { margin-bottom: 14px; display: none; }
-.prog-track { height: 4px; background: #242830; border-radius: 2px; overflow: hidden; }
-.prog-fill { height: 100%; background: #22d3a0; border-radius: 2px; transition: width .3s; width: 0%; }
+.prog-track { height: 4px; background: #e2e6ed; border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; background: #16a34a; border-radius: 2px; transition: width .3s; width: 0%; }
 .prog-label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; margin-top: 6px; text-align: center; }
+
+/* ── STATS ── */
 .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
-.stat { background: #111418; border: 1px solid #242830; border-radius: 10px; padding: 12px; text-align: center; }
-.stat-val { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; }
-.stat-val.g { color: #22d3a0; }
-.stat-val.a { color: #fbbf24; }
-.stat-lbl { font-size: 10px; color: #64748b; margin-top: 3px; font-family: 'Space Mono', monospace; }
+.stat { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.stat-val { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; color: #1a1f2e; }
+.stat-val.g { color: #16a34a; }
+.stat-val.a { color: #d97706; }
+.stat-lbl { font-size: 10px; color: #94a3b8; margin-top: 3px; font-family: 'Space Mono', monospace; }
+
+/* ── FILTERS ── */
 .filters { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
 .filters::-webkit-scrollbar { display: none; }
-.filters a { padding: 8px 14px; border-radius: 20px; border: 1px solid #2e3440; color: #64748b; font-family: 'Space Mono', monospace; font-size: 11px; white-space: nowrap; flex-shrink: 0; text-decoration: none; display: block; touch-action: manipulation; }
-.filters a.active { background: #e2e8f0; color: #0a0c0f; border-color: transparent; }
+.filters a { padding: 8px 14px; border-radius: 20px; border: 1px solid #cbd5e1; color: #64748b; font-family: 'Space Mono', monospace; font-size: 11px; white-space: nowrap; flex-shrink: 0; text-decoration: none; display: block; touch-action: manipulation; background: #ffffff; }
+.filters a.active { background: #1a1f2e; color: #ffffff; border-color: transparent; }
+
+/* ── CARDS ── */
 .cards { display: flex; flex-direction: column; gap: 10px; }
-.card { background: #111418; border: 1px solid #242830; border-radius: 14px; overflow: hidden; border-left: 4px solid #2e3440; }
-.card.bull { border-left-color: #22d3a0; }
-.card.bear { border-left-color: #f87171; }
+.card { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 14px; overflow: hidden; border-left: 5px solid #cbd5e1; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.card.bull { border-left-color: #16a34a; }
+.card.bear { border-left-color: #dc2626; }
 .card-top { padding: 14px; }
 .card-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-.ticker { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; line-height: 1; }
-.price { font-family: 'Space Mono', monospace; font-size: 16px; padding-top: 3px; }
+.ticker { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; line-height: 1; color: #1a1f2e; }
+.price { font-family: 'Space Mono', monospace; font-size: 16px; padding-top: 3px; color: #334155; }
 .chg { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 5px; margin-top: 2px; }
-.chg.up { background: #0d2e25; color: #22d3a0; }
-.chg.dn { background: #2d1515; color: #f87171; }
-.chg.flat { background: #181c22; color: #64748b; }
+.chg.up { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.chg.dn { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.chg.flat { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e6ed; }
 .dir { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 5px; flex-shrink: 0; }
-.dir.bull { background: #0d2e25; color: #22d3a0; border: 1px solid #0a6648; }
-.dir.bear { background: #2d1515; color: #f87171; border: 1px solid #7a2020; }
+.dir.bull { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.dir.bear { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+/* ── PROBABILITY ── */
 .prob-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-.prob-title { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; }
+.prob-title { font-family: 'Space Mono', monospace; font-size: 10px; color: #94a3b8; }
 .prob-pct { font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; }
-.prob-pct.hi { color: #22d3a0; }
-.prob-pct.md { color: #fbbf24; }
-.prob-pct.lo { color: #f87171; }
-.prob-bar { height: 10px; background: #181c22; border-radius: 5px; overflow: hidden; border: 1px solid #242830; margin-bottom: 4px; }
+.prob-pct.hi { color: #16a34a; }
+.prob-pct.md { color: #d97706; }
+.prob-pct.lo { color: #dc2626; }
+.prob-bar { height: 10px; background: #f1f5f9; border-radius: 5px; overflow: hidden; border: 1px solid #e2e6ed; margin-bottom: 4px; }
 .prob-fill { height: 100%; border-radius: 5px; }
-.prob-fill.hi { background: #22d3a0; }
-.prob-fill.md { background: #fbbf24; }
-.prob-fill.lo { background: #f87171; }
-.prob-sub { font-family: 'Space Mono', monospace; font-size: 10px; margin-bottom: 10px; }
-.prob-sub.hi { color: #22d3a0; }
-.prob-sub.md { color: #fbbf24; }
-.prob-sub.lo { color: #f87171; }
+.prob-fill.hi { background: #16a34a; }
+.prob-fill.md { background: #d97706; }
+.prob-fill.lo { background: #dc2626; }
+.prob-sub { font-family: 'Space Mono', monospace; font-size: 10px; margin-bottom: 10px; font-weight: 700; }
+.prob-sub.hi { color: #16a34a; }
+.prob-sub.md { color: #d97706; }
+.prob-sub.lo { color: #dc2626; }
+
+/* ── CANDLES ── */
 .candles { display: flex; gap: 4px; align-items: flex-end; height: 34px; margin-bottom: 8px; }
 .candle { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 .cw { width: 2px; border-radius: 1px; }
 .cb { width: 11px; border-radius: 2px; }
-.candle.g .cb { background: #22d3a0; } .candle.g .cw { background: #0f9972; }
-.candle.r .cb { background: #f87171; } .candle.r .cw { background: #b84040; }
-.candle.d .cb { background: #3a4455; } .candle.d .cw { background: #2a3345; }
+.candle.g .cb { background: #16a34a; } .candle.g .cw { background: #4ade80; }
+.candle.r .cb { background: #dc2626; } .candle.r .cw { background: #f87171; }
+.candle.d .cb { background: #cbd5e1; } .candle.d .cw { background: #e2e6ed; }
+
+/* ── STARS ── */
 .stars { display: inline-flex; gap: 2px; }
-.star { width: 7px; height: 7px; border-radius: 1px; background: #242830; }
-.star.on { background: #fbbf24; }
-.action-hint { background: #0d1f1a; border-top: 2px solid #0a6648; padding: 12px 14px; }
-.action-hint p { font-family: 'Space Mono', monospace; font-size: 12px; color: #a8d5c5; line-height: 2; }
-.action-hint p strong { color: #22d3a0; font-size: 14px; }
-.action-hint .strike { color: #ffffff; font-weight: 700; font-size: 14px; background: #0a3d2e; padding: 1px 6px; border-radius: 4px; border: 1px solid #0a6648; }
-.meta-row { background: #151a20; padding: 8px 14px; border-top: 1px solid #242830; display: flex; gap: 10px; flex-wrap: wrap; }
-.meta-i { font-family: 'Space Mono', monospace; font-size: 10px; color: #4a5568; }
-.meta-i span { color: #94a3b8; }
+.star { width: 7px; height: 7px; border-radius: 1px; background: #e2e6ed; }
+.star.on { background: #d97706; }
+
+/* ── ACTION HINT ── */
+.action-hint { background: #f0fdf4; border-top: 2px solid #16a34a; padding: 12px 14px; }
+.action-hint p { font-family: 'Space Mono', monospace; font-size: 12px; color: #166534; line-height: 2; }
+.action-hint p strong { color: #15803d; font-size: 14px; }
+.action-hint .strike { color: #ffffff; font-weight: 700; font-size: 14px; background: #15803d; padding: 2px 8px; border-radius: 4px; }
+
+/* ── META ROW ── */
+.meta-row { background: #f8fafc; padding: 8px 14px; border-top: 1px solid #e2e6ed; display: flex; gap: 10px; flex-wrap: wrap; }
+.meta-i { font-family: 'Space Mono', monospace; font-size: 10px; color: #94a3b8; }
+.meta-i span { color: #475569; font-weight: 700; }
+
+/* ── SETTINGS ── */
 .settings-section { margin-bottom: 20px; }
-.settings-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #64748b; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #242830; }
-.settings-box { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-.prow { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #242830; font-family: 'Space Mono', monospace; font-size: 11px; }
+.settings-title { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: #1a1f2e; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #1a1f2e; }
+.settings-box { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 12px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.prow { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-family: 'Space Mono', monospace; font-size: 11px; }
 .prow:last-child { border-bottom: none; }
 .pname { color: #64748b; }
-.pval { color: #e2e8f0; font-weight: 700; }
-.pval.g { color: #22d3a0; }
+.pval { color: #1a1f2e; font-weight: 700; }
+.pval.g { color: #16a34a; }
 .log-line { font-family: 'Space Mono', monospace; font-size: 10px; line-height: 2; }
-.log-line.ok { color: #22d3a0; }
-.log-line.skip { color: #3a4455; }
-.hint { font-size: 11px; color: #3a4455; line-height: 1.7; font-family: 'Space Mono', monospace; }
-.empty { text-align: center; padding: 40px 20px; color: #64748b; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 2.4; }
+.log-line.ok { color: #16a34a; font-weight: 700; }
+.log-line.skip { color: #94a3b8; }
+.hint { font-size: 11px; color: #475569; line-height: 1.9; font-family: 'Space Mono', monospace; }
+.empty { text-align: center; padding: 40px 20px; color: #94a3b8; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 2.4; }
 
 /* ── ON-DEMAND SCANNER ── */
-.lookup-box { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
-.lookup-box label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; letter-spacing: 0.08em; display: block; margin-bottom: 8px; }
+.lookup-box { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.lookup-box label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; letter-spacing: 0.08em; display: block; margin-bottom: 8px; font-weight: 700; }
 .lookup-row { display: flex; gap: 8px; }
-.lookup-row input { flex: 1; background: #181c22; border: 1px solid #2e3440; border-radius: 8px; color: #e2e8f0; font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; padding: 14px 12px; outline: none; -webkit-appearance: none; text-transform: uppercase; letter-spacing: 0.08em; }
-.lookup-row input:focus { border-color: #0a6648; }
-.lookup-row input::placeholder { font-size: 12px; letter-spacing: 0.04em; color: #3a4455; text-transform: none; font-weight: 400; }
-.lookup-btn { padding: 14px 18px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; white-space: nowrap; }
+.lookup-row input { flex: 1; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; color: #1a1f2e; font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; padding: 14px 12px; outline: none; -webkit-appearance: none; text-transform: uppercase; letter-spacing: 0.08em; }
+.lookup-row input:focus { border-color: #16a34a; }
+.lookup-row input::placeholder { font-size: 12px; letter-spacing: 0.04em; color: #94a3b8; text-transform: none; font-weight: 400; }
+.lookup-btn { padding: 14px 18px; background: #1a1f2e; border: none; border-radius: 8px; color: #ffffff; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; white-space: nowrap; }
 .lookup-btn:disabled { opacity: .4; }
 .lookup-result { margin-top: 14px; }
 .lookup-spinning { text-align: center; padding: 30px; font-family: 'Space Mono', monospace; font-size: 11px; color: #64748b; }
 
 /* ── TRADE LOG ── */
 .tlog-section { margin-bottom: 14px; }
-.tlog-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #64748b; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #242830; display: flex; justify-content: space-between; align-items: center; }
-.tlog-title span { color: #22d3a0; }
+.tlog-title { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: #1a1f2e; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #1a1f2e; display: flex; justify-content: space-between; align-items: center; }
+.tlog-title span { color: #16a34a; }
 
 /* Conversational prompt */
-.convo-box { background: #111418; border: 1px solid #242830; border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
-.convo-msg { padding: 14px; border-bottom: 1px solid #242830; }
-.convo-msg p { font-family: 'Space Mono', monospace; font-size: 11px; color: #e2e8f0; line-height: 1.8; }
-.convo-msg p .hl { color: #22d3a0; }
-.convo-msg p .hl2 { color: #fbbf24; }
+.convo-box { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 12px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.convo-msg { padding: 14px; border-bottom: 1px solid #f1f5f9; }
+.convo-msg p { font-family: 'Space Mono', monospace; font-size: 11px; color: #334155; line-height: 1.8; }
+.convo-msg p .hl { color: #16a34a; font-weight: 700; }
+.convo-msg p .hl2 { color: #d97706; font-weight: 700; }
 .convo-btns { display: flex; gap: 0; }
-.convo-btns button { flex: 1; padding: 16px 8px; background: #181c22; border: none; border-right: 1px solid #242830; color: #64748b; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; cursor: pointer; touch-action: manipulation; -webkit-appearance: none; letter-spacing: 0.04em; }
+.convo-btns button { flex: 1; padding: 16px 8px; background: #f8fafc; border: none; border-right: 1px solid #e2e6ed; color: #94a3b8; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; cursor: pointer; touch-action: manipulation; -webkit-appearance: none; letter-spacing: 0.04em; }
 .convo-btns button:last-child { border-right: none; }
-.convo-btns button.buy-btn { color: #22d3a0; }
-.convo-btns button.sell-btn { color: #f87171; }
-.convo-btns button:active { background: #1e2330; }
+.convo-btns button.buy-btn { color: #16a34a; background: #f0fdf4; }
+.convo-btns button.sell-btn { color: #dc2626; background: #fef2f2; }
+.convo-btns button:active { opacity: 0.7; }
 
 /* Price input prompt */
-.price-prompt { background: #111418; border: 1px solid #0a6648; border-radius: 12px; padding: 14px; margin-bottom: 14px; display: none; }
+.price-prompt { background: #ffffff; border: 2px solid #16a34a; border-radius: 12px; padding: 14px; margin-bottom: 14px; display: none; box-shadow: 0 2px 8px rgba(22,163,74,0.15); }
 .price-prompt.show { display: block; }
 .price-prompt label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; display: block; margin-bottom: 8px; }
-.price-prompt .prompt-q { font-family: 'Space Mono', monospace; font-size: 13px; color: #e2e8f0; margin-bottom: 12px; line-height: 1.6; }
-.price-prompt .prompt-q .hl { color: #22d3a0; }
-.price-prompt .prompt-q .hl2 { color: #fbbf24; }
+.price-prompt .prompt-q { font-family: 'Space Mono', monospace; font-size: 13px; color: #1a1f2e; margin-bottom: 12px; line-height: 1.6; font-weight: 700; }
+.price-prompt .prompt-q .hl { color: #16a34a; }
+.price-prompt .prompt-q .hl2 { color: #d97706; }
 .price-input-row { display: flex; gap: 8px; align-items: center; }
-.price-input-row span { font-family: 'Space Mono', monospace; font-size: 20px; color: #64748b; }
-.price-input-row input { flex: 1; background: #181c22; border: 1px solid #2e3440; border-radius: 8px; color: #e2e8f0; font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; padding: 14px 12px; outline: none; -webkit-appearance: none; }
-.price-input-row input:focus { border-color: #0a6648; }
-.price-confirm-btn { width: 100%; padding: 14px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 12px; -webkit-appearance: none; touch-action: manipulation; }
+.price-input-row span { font-family: 'Space Mono', monospace; font-size: 20px; color: #94a3b8; }
+.price-input-row input { flex: 1; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; color: #1a1f2e; font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; padding: 14px 12px; outline: none; -webkit-appearance: none; }
+.price-input-row input:focus { border-color: #16a34a; }
+.price-confirm-btn { width: 100%; padding: 14px; background: #1a1f2e; border: none; border-radius: 8px; color: #ffffff; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 12px; -webkit-appearance: none; touch-action: manipulation; }
 .price-cancel { text-align: center; margin-top: 10px; }
-.price-cancel a { font-family: 'Space Mono', monospace; font-size: 10px; color: #3a4455; text-decoration: none; }
+.price-cancel a { font-family: 'Space Mono', monospace; font-size: 10px; color: #94a3b8; text-decoration: none; }
 
 /* Trade rows */
 .trade-rows { display: flex; flex-direction: column; gap: 8px; }
-.trade-row { background: #111418; border: 1px solid #242830; border-radius: 12px; overflow: hidden; }
+.trade-row { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
 .trade-row-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; }
-.trade-ticker { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; }
-.trade-date { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; margin-left: auto; }
-.trade-entry { font-family: 'Space Mono', monospace; font-size: 11px; color: #64748b; padding: 0 14px 8px; }
-.trade-entry .ev { color: #e2e8f0; }
-.trade-status { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid #242830; background: #181c22; }
-.trade-open { font-family: 'Space Mono', monospace; font-size: 10px; color: #fbbf24; }
+.trade-ticker { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: #1a1f2e; }
+.trade-date { font-family: 'Space Mono', monospace; font-size: 10px; color: #94a3b8; margin-left: auto; }
+.trade-entry { font-family: 'Space Mono', monospace; font-size: 11px; color: #94a3b8; padding: 0 14px 8px; }
+.trade-entry .ev { color: #334155; font-weight: 700; }
+.trade-status { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid #f1f5f9; background: #f8fafc; }
+.trade-open { font-family: 'Space Mono', monospace; font-size: 10px; color: #d97706; }
 .trade-pnl { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; }
-.trade-pnl.win { color: #22d3a0; }
-.trade-pnl.loss { color: #f87171; }
-.trade-pnl.open { color: #fbbf24; }
-.trade-sell-btn { padding: 8px 14px; background: #2d1515; border: 1px solid #7a2020; border-radius: 6px; color: #f87171; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; }
+.trade-pnl.win { color: #16a34a; }
+.trade-pnl.loss { color: #dc2626; }
+.trade-pnl.open { color: #d97706; }
+.trade-sell-btn { padding: 8px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; color: #dc2626; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; }
 
 /* Sheets setup */
-.sheets-setup { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
-.sheets-setup label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; letter-spacing: 0.08em; display: block; margin-bottom: 8px; }
-.sheets-setup input { width: 100%; background: #181c22; border: 1px solid #2e3440; border-radius: 8px; color: #e2e8f0; font-family: 'Space Mono', monospace; font-size: 11px; padding: 12px; outline: none; margin-bottom: 10px; -webkit-appearance: none; display: block; }
-.sheets-setup input:focus { border-color: #0a6648; }
-.sheets-save-btn { width: 100%; padding: 13px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; display: block; }
-.sheets-ok { font-size: 11px; color: #22d3a0; font-family: 'Space Mono', monospace; margin-top: 8px; display: none; }
-.sheets-hint { font-family: 'Space Mono', monospace; font-size: 10px; color: #3a4455; line-height: 1.8; margin-top: 10px; }
-.sheets-hint a { color: #64748b; }
+.sheets-setup { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.sheets-setup label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; letter-spacing: 0.08em; display: block; margin-bottom: 8px; font-weight: 700; }
+.sheets-setup input { width: 100%; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; color: #1a1f2e; font-family: 'Space Mono', monospace; font-size: 11px; padding: 12px; outline: none; margin-bottom: 10px; -webkit-appearance: none; display: block; }
+.sheets-setup input:focus { border-color: #16a34a; }
+.sheets-save-btn { width: 100%; padding: 13px; background: #1a1f2e; border: none; border-radius: 8px; color: #ffffff; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; display: block; }
+.sheets-ok { font-size: 11px; color: #16a34a; font-family: 'Space Mono', monospace; margin-top: 8px; display: none; font-weight: 700; }
+.sheets-hint { font-family: 'Space Mono', monospace; font-size: 10px; color: #475569; line-height: 1.9; margin-top: 10px; }
+.sheets-hint a { color: #16a34a; font-weight: 700; }
 
 /* Summary bar */
 .summary-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 14px; }
-.sum-box { background: #111418; border: 1px solid #242830; border-radius: 10px; padding: 10px; text-align: center; }
-.sum-val { font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; }
-.sum-val.g { color: #22d3a0; }
-.sum-val.r { color: #f87171; }
-.sum-val.a { color: #fbbf24; }
-.sum-lbl { font-family: 'Space Mono', monospace; font-size: 9px; color: #64748b; margin-top: 2px; }
+.sum-box { background: #ffffff; border: 1px solid #e2e6ed; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.sum-val { font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; color: #1a1f2e; }
+.sum-val.g { color: #16a34a; }
+.sum-val.r { color: #dc2626; }
+.sum-val.a { color: #d97706; }
+.sum-lbl { font-family: 'Space Mono', monospace; font-size: 9px; color: #94a3b8; margin-top: 2px; }
 
-.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0d2e25; border: 1px solid #0a6648; border-radius: 10px; padding: 12px 20px; font-family: 'Space Mono', monospace; font-size: 12px; color: #22d3a0; z-index: 999; transition: transform 0.3s ease; white-space: nowrap; }
+/* Toast */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1a1f2e; border-radius: 10px; padding: 12px 20px; font-family: 'Space Mono', monospace; font-size: 12px; color: #ffffff; z-index: 999; transition: transform 0.3s ease; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
 .toast.show { transform: translateX(-50%) translateY(0); }
-.toast.err { background: #2d1515; border-color: #7a2020; color: #f87171; }
+.toast.err { background: #dc2626; }
 </style>
 </head>
 <body>
@@ -300,10 +331,10 @@ body { min-height: 100vh; padding: 0 0 20px; }
   <div class="settings-section">
     <div class="settings-title">API Key</div>
     <div class="settings-box">
-      <label style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;display:block;margin-bottom:8px;">MASSIVE.COM KEY</label>
-      <input type="password" id="settingsKeyInput" placeholder="Paste key here…" style="width:100%;background:#181c22;border:1px solid #2e3440;border-radius:8px;color:#e2e8f0;font-family:'Space Mono',monospace;font-size:12px;padding:12px;outline:none;-webkit-appearance:none;display:block;margin-bottom:10px;"/>
-      <button onclick="saveKeyFromSettings()" style="width:100%;padding:13px;background:#0d2e25;border:1px solid #0a6648;border-radius:8px;color:#22d3a0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;display:block;">SAVE & CONNECT</button>
-      <div id="settingsKeyOk" style="font-size:11px;color:#22d3a0;font-family:'Space Mono',monospace;margin-top:8px;display:none;">✓ Connected</div>
+      <label style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;display:block;margin-bottom:8px;font-weight:700;">MASSIVE.COM KEY</label>
+      <input type="password" id="settingsKeyInput" placeholder="Paste key here…" style="width:100%;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;color:#1a1f2e;font-family:'Space Mono',monospace;font-size:12px;padding:12px;outline:none;-webkit-appearance:none;display:block;margin-bottom:10px;"/>
+      <button onclick="saveKeyFromSettings()" style="width:100%;padding:13px;background:#1a1f2e;border:none;border-radius:8px;color:#ffffff;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;display:block;">SAVE & CONNECT</button>
+      <div id="settingsKeyOk" style="font-size:11px;color:#16a34a;font-family:'Space Mono',monospace;margin-top:8px;display:none;font-weight:700;">✓ Connected</div>
     </div>
   </div>
 
@@ -317,7 +348,7 @@ body { min-height: 100vh; padding: 0 0 20px; }
       <button class="sheets-save-btn" onclick="saveSheetsCreds()">SAVE SHEETS CONNECTION</button>
       <div class="sheets-ok" id="sheetsOk">✓ Google Sheets connected</div>
       <div class="sheets-hint">
-        <strong style="color:#64748b;">Setup (5 min):</strong><br>
+        <strong style="color:#475569;">Setup (5 min):</strong><br>
         1. Go to <a href="https://sheets.new" target="_blank">sheets.new</a> → name it "Trade Log"<br>
         2. Copy the Sheet ID from the URL (long string between /d/ and /edit)<br>
         3. Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a><br>
@@ -328,8 +359,8 @@ body { min-height: 100vh; padding: 0 0 20px; }
     </div>
     <div class="settings-box">
       <div class="settings-title" style="border:none;margin:0 0 8px;padding:0;">APPS SCRIPT — paste into your Sheet</div>
-      <div style="background:#0a0c0f;border-radius:8px;padding:12px;overflow-x:auto;">
-        <pre style="font-family:'Space Mono',monospace;font-size:9px;color:#64748b;line-height:1.8;white-space:pre-wrap;">function doPost(e) {
+      <div style="background:#f1f5f9;border:1px solid #e2e6ed;border-radius:8px;padding:12px;overflow-x:auto;">
+        <pre style="font-family:'Space Mono',monospace;font-size:9px;color:#334155;line-height:1.8;white-space:pre-wrap;">function doPost(e) {
   var sheet = SpreadsheetApp
     .getActiveSpreadsheet()
     .getActiveSheet();
@@ -364,13 +395,13 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }</pre>
       </div>
-      <div style="font-family:'Space Mono',monospace;font-size:10px;color:#3a4455;margin-top:8px;line-height:1.8;">
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:#475569;margin-top:8px;line-height:1.8;">
         After pasting: Deploy → New deployment → Web app → Execute as Me → Anyone → Deploy → copy the Web App URL and paste below.
       </div>
-      <label style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;letter-spacing:0.08em;display:block;margin-top:12px;margin-bottom:8px;">WEB APP URL</label>
-      <input type="text" id="webAppUrlInput" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%;background:#181c22;border:1px solid #2e3440;border-radius:8px;color:#e2e8f0;font-family:'Space Mono',monospace;font-size:10px;padding:12px;outline:none;-webkit-appearance:none;display:block;margin-bottom:10px;"/>
-      <button onclick="saveWebAppUrl()" style="width:100%;padding:13px;background:#0d2e25;border:1px solid #0a6648;border-radius:8px;color:#22d3a0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;display:block;">SAVE WEB APP URL</button>
-      <div id="webAppOk" style="font-size:11px;color:#22d3a0;font-family:'Space Mono',monospace;margin-top:8px;display:none;">✓ Sheets sync active — trades will auto-log</div>
+      <label style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;letter-spacing:0.08em;font-weight:700;display:block;margin-top:12px;margin-bottom:8px;">WEB APP URL</label>
+      <input type="text" id="webAppUrlInput" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;color:#1a1f2e;font-family:'Space Mono',monospace;font-size:10px;padding:12px;outline:none;-webkit-appearance:none;display:block;margin-bottom:10px;"/>
+      <button onclick="saveWebAppUrl()" style="width:100%;padding:13px;background:#1a1f2e;border:none;border-radius:8px;color:#ffffff;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;display:block;">SAVE WEB APP URL</button>
+      <div id="webAppOk" style="font-size:11px;color:#16a34a;font-family:'Space Mono',monospace;margin-top:8px;display:none;font-weight:700;">✓ Sheets sync active — trades will auto-log</div>
     </div>
   </div>
 
@@ -732,17 +763,17 @@ async function runLookup() {
     : 'Look for strike near $' + sig.strikeTarget.toFixed(2) + ' or just below';
 
   res.innerHTML = buildCard(sig) +
-    '<div style="background:#111418;border:1px solid #0a6648;border-radius:12px;padding:14px;margin-top:10px;">' +
-      '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:#64748b;margin-bottom:10px;letter-spacing:0.08em;">CONTRACT SUGGESTION</div>' +
-      '<div style="font-family:\'Space Mono\',monospace;font-size:13px;color:#22d3a0;margin-bottom:6px;">Buy a <strong>' + sig.contractType + '</strong></div>' +
-      '<div style="font-family:\'Space Mono\',monospace;font-size:11px;color:#e2e8f0;line-height:2;">' +
+    '<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:14px;margin-top:10px;">' +
+      '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:#64748b;margin-bottom:10px;letter-spacing:0.08em;font-weight:700;">CONTRACT SUGGESTION</div>' +
+      '<div style="font-family:\'Space Mono\',monospace;font-size:13px;color:#15803d;margin-bottom:6px;font-weight:700;">Buy a <strong>' + sig.contractType + '</strong></div>' +
+      '<div style="font-family:\'Space Mono\',monospace;font-size:11px;color:#166534;line-height:2;">' +
         strike + '<br>' +
         'Expiry: 2–4 weeks out<br>' +
         'Price target: ' + contractPrice + '<br>' +
         'Open interest: &gt; 50<br>' +
         'Exit: +50% profit or −50% stop' +
       '</div>' +
-      '<button onclick="prefillLog(\'' + sig.ticker + '\')" style="width:100%;margin-top:14px;padding:13px;background:#0d2e25;border:1px solid #0a6648;border-radius:8px;color:#22d3a0;font-family:\'Space Mono\',monospace;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;">LOG THIS TRADE →</button>' +
+      '<button onclick="prefillLog(\'' + sig.ticker + '\')" style="width:100%;margin-top:14px;padding:13px;background:#1a1f2e;border:none;border-radius:8px;color:#ffffff;font-family:\'Space Mono\',monospace;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;">LOG THIS TRADE →</button>' +
     '</div>';
 }
 
@@ -952,7 +983,7 @@ function renderTrades() {
     return '<div class="trade-row">' +
       '<div class="trade-row-head">' +
         '<div class="trade-ticker">' + t.ticker + '</div>' +
-        (isOpen ? '<span style="font-family:\'Space Mono\',monospace;font-size:10px;padding:3px 8px;border-radius:4px;background:#1a1500;color:#fbbf24;border:1px solid #7a6000;">OPEN</span>' : '<span style="font-family:\'Space Mono\',monospace;font-size:10px;color:#64748b;">' + (t.result || '') + '</span>') +
+        (isOpen ? '<span style="font-family:\'Space Mono\',monospace;font-size:10px;padding:3px 8px;border-radius:4px;background:#fef9c3;color:#92400e;border:1px solid #fde68a;">OPEN</span>' : '<span style="font-family:\'Space Mono\',monospace;font-size:10px;color:#64748b;font-weight:700;">' + (t.result || '') + '</span>') +
         '<div class="trade-date">' + t.date + '</div>' +
       '</div>' +
       '<div class="trade-entry">Entry: <span class="ev">$' + t.entryPrice.toFixed(2) + '/share</span> · Cost: <span class="ev">$' + (t.entryCost || (t.entryPrice*100)).toFixed(2) + '</span>' +

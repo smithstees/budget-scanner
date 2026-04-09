@@ -19,7 +19,7 @@ body { min-height: 100vh; padding: 0 0 20px; }
 .page { padding: 14px; max-width: 500px; margin: 0 auto; }
 .hidden { display: none !important; }
 .tab-row { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid #242830; border-radius: 10px; overflow: hidden; }
-.tab-row a { flex: 1; text-align: center; padding: 14px 8px; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: #64748b; text-decoration: none; background: #111418; border-right: 1px solid #242830; letter-spacing: 0.05em; display: block; }
+.tab-row a { flex: 1; text-align: center; padding: 12px 4px; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; color: #64748b; text-decoration: none; background: #111418; border-right: 1px solid #242830; letter-spacing: 0.04em; display: block; }
 .tab-row a:last-child { border-right: none; }
 .tab-row a.active { background: #0d2e25; color: #22d3a0; }
 .key-box { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
@@ -84,12 +84,13 @@ body { min-height: 100vh; padding: 0 0 20px; }
 .stars { display: inline-flex; gap: 2px; }
 .star { width: 7px; height: 7px; border-radius: 1px; background: #242830; }
 .star.on { background: #fbbf24; }
-.action-hint { background: #181c22; border-top: 1px solid #242830; padding: 10px 14px; }
-.action-hint p { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; line-height: 1.8; }
-.action-hint strong { color: #fbbf24; }
-.meta-row { background: #181c22; padding: 8px 14px; border-top: 1px solid #1a1f26; display: flex; gap: 10px; flex-wrap: wrap; }
-.meta-i { font-family: 'Space Mono', monospace; font-size: 10px; color: #3a4455; }
-.meta-i span { color: #64748b; }
+.action-hint { background: #0d1f1a; border-top: 2px solid #0a6648; padding: 12px 14px; }
+.action-hint p { font-family: 'Space Mono', monospace; font-size: 12px; color: #a8d5c5; line-height: 2; }
+.action-hint p strong { color: #22d3a0; font-size: 14px; }
+.action-hint .strike { color: #ffffff; font-weight: 700; font-size: 14px; background: #0a3d2e; padding: 1px 6px; border-radius: 4px; border: 1px solid #0a6648; }
+.meta-row { background: #151a20; padding: 8px 14px; border-top: 1px solid #242830; display: flex; gap: 10px; flex-wrap: wrap; }
+.meta-i { font-family: 'Space Mono', monospace; font-size: 10px; color: #4a5568; }
+.meta-i span { color: #94a3b8; }
 .settings-section { margin-bottom: 20px; }
 .settings-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #64748b; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #242830; }
 .settings-box { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
@@ -103,6 +104,90 @@ body { min-height: 100vh; padding: 0 0 20px; }
 .log-line.skip { color: #3a4455; }
 .hint { font-size: 11px; color: #3a4455; line-height: 1.7; font-family: 'Space Mono', monospace; }
 .empty { text-align: center; padding: 40px 20px; color: #64748b; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 2.4; }
+
+/* ── ON-DEMAND SCANNER ── */
+.lookup-box { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.lookup-box label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; letter-spacing: 0.08em; display: block; margin-bottom: 8px; }
+.lookup-row { display: flex; gap: 8px; }
+.lookup-row input { flex: 1; background: #181c22; border: 1px solid #2e3440; border-radius: 8px; color: #e2e8f0; font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; padding: 14px 12px; outline: none; -webkit-appearance: none; text-transform: uppercase; letter-spacing: 0.08em; }
+.lookup-row input:focus { border-color: #0a6648; }
+.lookup-row input::placeholder { font-size: 12px; letter-spacing: 0.04em; color: #3a4455; text-transform: none; font-weight: 400; }
+.lookup-btn { padding: 14px 18px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; white-space: nowrap; }
+.lookup-btn:disabled { opacity: .4; }
+.lookup-result { margin-top: 14px; }
+.lookup-spinning { text-align: center; padding: 30px; font-family: 'Space Mono', monospace; font-size: 11px; color: #64748b; }
+
+/* ── TRADE LOG ── */
+.tlog-section { margin-bottom: 14px; }
+.tlog-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: #64748b; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #242830; display: flex; justify-content: space-between; align-items: center; }
+.tlog-title span { color: #22d3a0; }
+
+/* Conversational prompt */
+.convo-box { background: #111418; border: 1px solid #242830; border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.convo-msg { padding: 14px; border-bottom: 1px solid #242830; }
+.convo-msg p { font-family: 'Space Mono', monospace; font-size: 11px; color: #e2e8f0; line-height: 1.8; }
+.convo-msg p .hl { color: #22d3a0; }
+.convo-msg p .hl2 { color: #fbbf24; }
+.convo-btns { display: flex; gap: 0; }
+.convo-btns button { flex: 1; padding: 16px 8px; background: #181c22; border: none; border-right: 1px solid #242830; color: #64748b; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; cursor: pointer; touch-action: manipulation; -webkit-appearance: none; letter-spacing: 0.04em; }
+.convo-btns button:last-child { border-right: none; }
+.convo-btns button.buy-btn { color: #22d3a0; }
+.convo-btns button.sell-btn { color: #f87171; }
+.convo-btns button:active { background: #1e2330; }
+
+/* Price input prompt */
+.price-prompt { background: #111418; border: 1px solid #0a6648; border-radius: 12px; padding: 14px; margin-bottom: 14px; display: none; }
+.price-prompt.show { display: block; }
+.price-prompt label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; display: block; margin-bottom: 8px; }
+.price-prompt .prompt-q { font-family: 'Space Mono', monospace; font-size: 13px; color: #e2e8f0; margin-bottom: 12px; line-height: 1.6; }
+.price-prompt .prompt-q .hl { color: #22d3a0; }
+.price-prompt .prompt-q .hl2 { color: #fbbf24; }
+.price-input-row { display: flex; gap: 8px; align-items: center; }
+.price-input-row span { font-family: 'Space Mono', monospace; font-size: 20px; color: #64748b; }
+.price-input-row input { flex: 1; background: #181c22; border: 1px solid #2e3440; border-radius: 8px; color: #e2e8f0; font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; padding: 14px 12px; outline: none; -webkit-appearance: none; }
+.price-input-row input:focus { border-color: #0a6648; }
+.price-confirm-btn { width: 100%; padding: 14px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 12px; -webkit-appearance: none; touch-action: manipulation; }
+.price-cancel { text-align: center; margin-top: 10px; }
+.price-cancel a { font-family: 'Space Mono', monospace; font-size: 10px; color: #3a4455; text-decoration: none; }
+
+/* Trade rows */
+.trade-rows { display: flex; flex-direction: column; gap: 8px; }
+.trade-row { background: #111418; border: 1px solid #242830; border-radius: 12px; overflow: hidden; }
+.trade-row-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; }
+.trade-ticker { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; }
+.trade-date { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; margin-left: auto; }
+.trade-entry { font-family: 'Space Mono', monospace; font-size: 11px; color: #64748b; padding: 0 14px 8px; }
+.trade-entry .ev { color: #e2e8f0; }
+.trade-status { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid #242830; background: #181c22; }
+.trade-open { font-family: 'Space Mono', monospace; font-size: 10px; color: #fbbf24; }
+.trade-pnl { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; }
+.trade-pnl.win { color: #22d3a0; }
+.trade-pnl.loss { color: #f87171; }
+.trade-pnl.open { color: #fbbf24; }
+.trade-sell-btn { padding: 8px 14px; background: #2d1515; border: 1px solid #7a2020; border-radius: 6px; color: #f87171; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; }
+
+/* Sheets setup */
+.sheets-setup { background: #111418; border: 1px solid #242830; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.sheets-setup label { font-family: 'Space Mono', monospace; font-size: 10px; color: #64748b; letter-spacing: 0.08em; display: block; margin-bottom: 8px; }
+.sheets-setup input { width: 100%; background: #181c22; border: 1px solid #2e3440; border-radius: 8px; color: #e2e8f0; font-family: 'Space Mono', monospace; font-size: 11px; padding: 12px; outline: none; margin-bottom: 10px; -webkit-appearance: none; display: block; }
+.sheets-setup input:focus { border-color: #0a6648; }
+.sheets-save-btn { width: 100%; padding: 13px; background: #0d2e25; border: 1px solid #0a6648; border-radius: 8px; color: #22d3a0; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; -webkit-appearance: none; touch-action: manipulation; display: block; }
+.sheets-ok { font-size: 11px; color: #22d3a0; font-family: 'Space Mono', monospace; margin-top: 8px; display: none; }
+.sheets-hint { font-family: 'Space Mono', monospace; font-size: 10px; color: #3a4455; line-height: 1.8; margin-top: 10px; }
+.sheets-hint a { color: #64748b; }
+
+/* Summary bar */
+.summary-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 14px; }
+.sum-box { background: #111418; border: 1px solid #242830; border-radius: 10px; padding: 10px; text-align: center; }
+.sum-val { font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; }
+.sum-val.g { color: #22d3a0; }
+.sum-val.r { color: #f87171; }
+.sum-val.a { color: #fbbf24; }
+.sum-lbl { font-family: 'Space Mono', monospace; font-size: 9px; color: #64748b; margin-top: 2px; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0d2e25; border: 1px solid #0a6648; border-radius: 10px; padding: 12px 20px; font-family: 'Space Mono', monospace; font-size: 12px; color: #22d3a0; z-index: 999; transition: transform 0.3s ease; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.err { background: #2d1515; border-color: #7a2020; color: #f87171; }
 </style>
 </head>
 <body>
@@ -117,11 +202,14 @@ body { min-height: 100vh; padding: 0 0 20px; }
 
 <div style="padding: 12px 14px 0; max-width: 500px; margin: 0 auto;">
   <div class="tab-row">
-    <a href="#" id="tabScan" class="active" onclick="showTab('scan'); return false;">SCAN</a>
-    <a href="#" id="tabSettings" onclick="showTab('settings'); return false;">SETTINGS</a>
+    <a href="#" id="tabScan"     class="active" onclick="showTab('scan');return false;">SCAN</a>
+    <a href="#" id="tabLookup"              onclick="showTab('lookup');return false;">TICKER</a>
+    <a href="#" id="tabLog"                 onclick="showTab('log');return false;">TRADE LOG</a>
+    <a href="#" id="tabSettings"            onclick="showTab('settings');return false;">SETTINGS</a>
   </div>
 </div>
 
+<!-- ══════════ SCAN TAB ══════════ -->
 <div class="page" id="pageScan">
   <div class="key-box">
     <label>MASSIVE.COM API KEY</label>
@@ -129,14 +217,11 @@ body { min-height: 100vh; padding: 0 0 20px; }
     <button class="connect-btn" onclick="saveKey()">CONNECT →</button>
     <div class="key-ok" id="keyOk">✓ Connected — candle data (free tier)</div>
   </div>
-
   <button class="scan-btn" id="scanBtn" onclick="runScan()">SCAN NOW →</button>
-
   <div class="prog" id="prog">
     <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
     <div class="prog-label" id="progLabel">Starting…</div>
   </div>
-
   <div id="resultsArea" style="display:none">
     <div class="stats" id="statsRow"></div>
     <div class="filters">
@@ -147,7 +232,6 @@ body { min-height: 100vh; padding: 0 0 20px; }
     </div>
     <div class="cards" id="cardList"></div>
   </div>
-
   <div id="emptyState" class="empty" style="display:none">
     No setups found right now.<br>
     Check Settings → Scan Log to see why.<br><br>
@@ -155,6 +239,63 @@ body { min-height: 100vh; padding: 0 0 20px; }
   </div>
 </div>
 
+<!-- ══════════ TICKER LOOKUP TAB ══════════ -->
+<div class="page hidden" id="pageLookup">
+  <div class="lookup-box">
+    <label>ON-DEMAND TICKER SCAN</label>
+    <div class="lookup-row">
+      <input type="text" id="lookupInput" placeholder="Type any ticker, e.g. NVDA" maxlength="8" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="this.value=this.value.toUpperCase()"/>
+      <button class="lookup-btn" id="lookupBtn" onclick="runLookup()">SCAN →</button>
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:#3a4455;margin-top:10px;line-height:1.8;">
+      Runs the same probability scan as the nightly scanner · any ticker · free tier only
+    </div>
+  </div>
+  <div id="lookupResult"></div>
+</div>
+
+<!-- ══════════ TRADE LOG TAB ══════════ -->
+<div class="page hidden" id="pageLog">
+
+  <!-- Conversational entry -->
+  <div class="tlog-section">
+    <div class="tlog-title">LOG A TRADE <span id="openCount"></span></div>
+
+    <div class="convo-box" id="convoBox">
+      <div class="convo-msg">
+        <p id="convoText">What happened? Tap a button below to log a trade.</p>
+      </div>
+      <div class="convo-btns">
+        <button class="buy-btn" onclick="startLog('buy')">↑ I BOUGHT IT</button>
+        <button class="sell-btn" onclick="startLog('sell')">↓ I SOLD IT</button>
+      </div>
+    </div>
+
+    <!-- Price input prompt -->
+    <div class="price-prompt" id="pricePrompt">
+      <div class="prompt-q" id="promptQ"></div>
+      <div class="price-input-row">
+        <span>$</span>
+        <input type="number" id="priceInput" placeholder="0.00" step="0.01" min="0.01"/>
+      </div>
+      <button class="price-confirm-btn" onclick="confirmPrice()">CONFIRM →</button>
+      <div class="price-cancel"><a href="#" onclick="cancelLog();return false;">cancel</a></div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-bar" id="summaryBar" style="display:none"></div>
+
+  <!-- Trades list -->
+  <div class="tlog-section">
+    <div class="tlog-title">TRADE HISTORY</div>
+    <div class="trade-rows" id="tradeRows">
+      <div class="empty">No trades logged yet.<br>Tap "I Bought It" after you enter a trade.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SETTINGS TAB ══════════ -->
 <div class="page hidden" id="pageSettings">
   <div class="settings-section">
     <div class="settings-title">API Key</div>
@@ -163,6 +304,73 @@ body { min-height: 100vh; padding: 0 0 20px; }
       <input type="password" id="settingsKeyInput" placeholder="Paste key here…" style="width:100%;background:#181c22;border:1px solid #2e3440;border-radius:8px;color:#e2e8f0;font-family:'Space Mono',monospace;font-size:12px;padding:12px;outline:none;-webkit-appearance:none;display:block;margin-bottom:10px;"/>
       <button onclick="saveKeyFromSettings()" style="width:100%;padding:13px;background:#0d2e25;border:1px solid #0a6648;border-radius:8px;color:#22d3a0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;display:block;">SAVE & CONNECT</button>
       <div id="settingsKeyOk" style="font-size:11px;color:#22d3a0;font-family:'Space Mono',monospace;margin-top:8px;display:none;">✓ Connected</div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">Google Sheets — Trade Log</div>
+    <div class="sheets-setup">
+      <label>SPREADSHEET ID</label>
+      <input type="text" id="sheetIdInput" placeholder="Paste your Google Sheet ID here"/>
+      <label>API KEY</label>
+      <input type="text" id="sheetKeyInput" placeholder="Paste your Google Sheets API key here"/>
+      <button class="sheets-save-btn" onclick="saveSheetsCreds()">SAVE SHEETS CONNECTION</button>
+      <div class="sheets-ok" id="sheetsOk">✓ Google Sheets connected</div>
+      <div class="sheets-hint">
+        <strong style="color:#64748b;">Setup (5 min):</strong><br>
+        1. Go to <a href="https://sheets.new" target="_blank">sheets.new</a> → name it "Trade Log"<br>
+        2. Copy the Sheet ID from the URL (long string between /d/ and /edit)<br>
+        3. Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a><br>
+        4. New project → Enable "Google Sheets API"<br>
+        5. Credentials → Create API Key → paste above<br>
+        6. In your Sheet: Extensions → Apps Script → paste the sync script (see below)
+      </div>
+    </div>
+    <div class="settings-box">
+      <div class="settings-title" style="border:none;margin:0 0 8px;padding:0;">APPS SCRIPT — paste into your Sheet</div>
+      <div style="background:#0a0c0f;border-radius:8px;padding:12px;overflow-x:auto;">
+        <pre style="font-family:'Space Mono',monospace;font-size:9px;color:#64748b;line-height:1.8;white-space:pre-wrap;">function doPost(e) {
+  var sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+
+  // Add header row if empty
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      'Date','Ticker','Direction',
+      'Entry $/share','Exit $/share',
+      'Entry $','Exit $',
+      '$ P&L','% Gain','Result','Notes'
+    ]);
+  }
+
+  sheet.appendRow([
+    data.date, data.ticker, data.direction,
+    data.entryPrice, data.exitPrice || '',
+    data.entryCost || '', data.exitValue || '',
+    data.pnl || '', data.pctGain || '',
+    data.result || 'OPEN', data.notes || ''
+  ]);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ok:true,status:'live'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:#3a4455;margin-top:8px;line-height:1.8;">
+        After pasting: Deploy → New deployment → Web app → Execute as Me → Anyone → Deploy → copy the Web App URL and paste below.
+      </div>
+      <label style="font-family:'Space Mono',monospace;font-size:10px;color:#64748b;letter-spacing:0.08em;display:block;margin-top:12px;margin-bottom:8px;">WEB APP URL</label>
+      <input type="text" id="webAppUrlInput" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%;background:#181c22;border:1px solid #2e3440;border-radius:8px;color:#e2e8f0;font-family:'Space Mono',monospace;font-size:10px;padding:12px;outline:none;-webkit-appearance:none;display:block;margin-bottom:10px;"/>
+      <button onclick="saveWebAppUrl()" style="width:100%;padding:13px;background:#0d2e25;border:1px solid #0a6648;border-radius:8px;color:#22d3a0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;touch-action:manipulation;display:block;">SAVE WEB APP URL</button>
+      <div id="webAppOk" style="font-size:11px;color:#22d3a0;font-family:'Space Mono',monospace;margin-top:8px;display:none;">✓ Sheets sync active — trades will auto-log</div>
     </div>
   </div>
 
@@ -212,9 +420,12 @@ body { min-height: 100vh; padding: 0 0 20px; }
   </div>
 </div>
 
-<script>
-const BASE = 'https://api.massive.com';
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
+<script>
+// ══════════ STATE ══════════
+const BASE = 'https://api.massive.com';
 const WATCHLIST = [
   "SNDL","SOFI","VALE","ITUB","BBD","GRAB","MARA","RIOT","CLSK","WULF",
   "HIMS","OPEN","SENS","EXPR","ZIM","CLOV","TLRY","SIRI","NOK","PLUG",
@@ -225,8 +436,14 @@ const WATCHLIST = [
   "HOOD","COIN","RBLX","U","DKNG","PENN","AFRM","UPST","WISH","WKHS"
 ];
 
-let apiKey = localStorage.getItem('poly_key') || '';
+let apiKey    = localStorage.getItem('poly_key') || '';
+let webAppUrl = localStorage.getItem('sheets_webapp_url') || '';
 let results = [], filter = 'all', scanLog = [];
+
+// Trade log state
+let trades = JSON.parse(localStorage.getItem('trade_log') || '[]');
+let logState = null; // { action: 'buy'|'sell', ticker: '', tradeId: null }
+let lastScannedTicker = '';
 
 window.onload = function() {
   if (apiKey) {
@@ -235,16 +452,24 @@ window.onload = function() {
     document.getElementById('keyOk').style.display = 'block';
     document.getElementById('keyInput').placeholder = '✓ Key saved — paste new to update';
   }
+  if (webAppUrl) {
+    document.getElementById('webAppOk').style.display = 'block';
+    if (document.getElementById('webAppUrlInput')) document.getElementById('webAppUrlInput').value = webAppUrl;
+  }
+  renderTrades();
 };
 
+// ══════════ TABS ══════════
 function showTab(t) {
-  document.getElementById('pageScan').classList.toggle('hidden', t !== 'scan');
-  document.getElementById('pageSettings').classList.toggle('hidden', t !== 'settings');
-  document.getElementById('tabScan').classList.toggle('active', t === 'scan');
-  document.getElementById('tabSettings').classList.toggle('active', t === 'settings');
+  ['scan','lookup','log','settings'].forEach(function(n) {
+    document.getElementById('page' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('hidden', t !== n);
+    document.getElementById('tab' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('active', t === n);
+  });
   if (t === 'settings') renderLog();
+  if (t === 'log') renderTrades();
 }
 
+// ══════════ API KEY ══════════
 function saveKey() {
   var v = document.getElementById('keyInput').value.trim();
   if (v.length > 8) {
@@ -253,10 +478,9 @@ function saveKey() {
     document.getElementById('badge').textContent = 'LIVE';
     document.getElementById('keyOk').style.display = 'block';
     document.getElementById('keyInput').placeholder = '✓ Key saved';
-    alert('Connected! Tap SCAN NOW to start.');
-  } else { alert('Please paste your full API key first.'); }
+    showToast('Connected!');
+  } else { showToast('Paste your full API key first', true); }
 }
-
 function saveKeyFromSettings() {
   var v = document.getElementById('settingsKeyInput').value.trim();
   if (v.length > 8) {
@@ -264,10 +488,31 @@ function saveKeyFromSettings() {
     document.getElementById('badge').className = 'badge live';
     document.getElementById('badge').textContent = 'LIVE';
     document.getElementById('settingsKeyOk').style.display = 'block';
-    alert('Connected! Tap SCAN to start scanning.');
-  } else { alert('Please paste your full API key first.'); }
+    showToast('Connected!');
+  } else { showToast('Paste your full API key first', true); }
 }
 
+// ══════════ SHEETS CREDS ══════════
+function saveSheetsCreds() {
+  var id  = document.getElementById('sheetIdInput').value.trim();
+  var key = document.getElementById('sheetKeyInput').value.trim();
+  if (id && key) {
+    localStorage.setItem('sheets_id', id);
+    localStorage.setItem('sheets_key', key);
+    document.getElementById('sheetsOk').style.display = 'block';
+    showToast('Sheets ID & key saved');
+  } else { showToast('Fill in both fields', true); }
+}
+function saveWebAppUrl() {
+  var v = document.getElementById('webAppUrlInput').value.trim();
+  if (v.startsWith('https://')) {
+    webAppUrl = v; localStorage.setItem('sheets_webapp_url', v);
+    document.getElementById('webAppOk').style.display = 'block';
+    showToast('✓ Sheets sync active!');
+  } else { showToast('Paste the full Web App URL', true); }
+}
+
+// ══════════ CANDLES + ANALYSIS (shared) ══════════
 async function fetchCandles(ticker) {
   try {
     var end = new Date();
@@ -361,8 +606,10 @@ async function analyze(ticker) {
     var p = calcProb(sig);
     sig.prob = p.prob; sig.tier = p.tier; sig.factors = p.factors;
     sig.action = trend === 'bullish'
-      ? 'CALL near $' + res.toFixed(2) + ' strike · 2–4 wk expiry · OI > 50'
-      : 'PUT near $' + sup.toFixed(2) + ' strike · 2–4 wk expiry · OI > 50';
+      ? '<strong>CALL</strong> near <span class="strike">$' + res.toFixed(2) + '</span> · 2–4 wk expiry · OI &gt; 50'
+      : '<strong>PUT</strong> near <span class="strike">$' + sup.toFixed(2) + '</span> · 2–4 wk expiry · OI &gt; 50';
+    sig.contractType = trend === 'bullish' ? 'CALL' : 'PUT';
+    sig.strikeTarget = trend === 'bullish' ? res : sup;
     scanLog.push({ t: ticker, ok: true, msg: '$' + sig.price + ' ' + trend + ' ' + sig.prob + '% vol ' + relVol + 'x' });
     return sig;
   } catch(e) {
@@ -371,8 +618,9 @@ async function analyze(ticker) {
   }
 }
 
+// ══════════ MAIN SCAN ══════════
 async function runScan() {
-  if (!apiKey) { alert('Paste your API key and tap CONNECT first.'); return; }
+  if (!apiKey) { showToast('Paste your API key and tap CONNECT first', true); return; }
   var btn = document.getElementById('scanBtn');
   btn.disabled = true; btn.textContent = 'SCANNING…';
   document.getElementById('prog').style.display = 'block';
@@ -421,45 +669,344 @@ function renderCards() {
     document.getElementById('cardList').innerHTML = '<div class="empty">No signals match this filter.</div>';
     return;
   }
-  document.getElementById('cardList').innerHTML = list.map(function(r) {
-    var chgCls = r.chg > 0.3 ? 'up' : r.chg < -0.3 ? 'dn' : 'flat';
-    var chgStr = (r.chg > 0 ? '+' : '') + r.chg.toFixed(2) + '%';
-    var cHTML = r.cdata.map(function(c) {
-      var bh = Math.round((c.body||0.5)*16)+4, wh = Math.round((c.wick||0.3)*10)+3;
-      return '<div class="candle ' + c.dir + '"><div class="cw" style="height:'+wh+'px"></div><div class="cb" style="height:'+bh+'px"></div><div class="cw" style="height:'+wh+'px"></div></div>';
-    }).join('');
-    var sHTML = '<div class="stars">' + [1,2,3,4,5].map(function(i){ return '<div class="star'+(i<=r.strength?' on':'')+'"></div>'; }).join('') + '</div>';
-    var probLbl = r.tier === 'hi' ? '✓ Strong setup' : r.tier === 'md' ? '~ Moderate setup' : '✗ Weak setup';
-    return '<div class="card ' + (r.trend==='bullish'?'bull':'bear') + '">' +
-      '<div class="card-top">' +
-        '<div class="card-head">' +
-          '<div><div class="ticker">' + r.ticker + '</div><div class="price">$' + r.price.toFixed(2) + '</div></div>' +
-          '<span class="chg ' + chgCls + '">' + chgStr + '</span>' +
-          '<span class="dir ' + (r.trend==='bullish'?'bull':'bear') + '">' + (r.trend==='bullish'?'↑ BULL':'↓ BEAR') + '</span>' +
-        '</div>' +
-        '<div class="prob-hdr"><span class="prob-title">50% GAIN PROB · 2-WK</span><span class="prob-pct ' + r.tier + '">' + r.prob + '%</span></div>' +
-        '<div class="prob-bar"><div class="prob-fill ' + r.tier + '" style="width:' + r.prob + '%"></div></div>' +
-        '<div class="prob-sub ' + r.tier + '">' + probLbl + ' · ' + (r.factors.slice(0,2).join(' · ') || '') + '</div>' +
-        '<div class="candles">' + cHTML + '</div>' +
-        sHTML +
+  document.getElementById('cardList').innerHTML = list.map(buildCard).join('');
+}
+
+function buildCard(r) {
+  var chgCls = r.chg > 0.3 ? 'up' : r.chg < -0.3 ? 'dn' : 'flat';
+  var chgStr = (r.chg > 0 ? '+' : '') + r.chg.toFixed(2) + '%';
+  var cHTML = r.cdata.map(function(c) {
+    var bh = Math.round((c.body||0.5)*16)+4, wh = Math.round((c.wick||0.3)*10)+3;
+    return '<div class="candle ' + c.dir + '"><div class="cw" style="height:'+wh+'px"></div><div class="cb" style="height:'+bh+'px"></div><div class="cw" style="height:'+wh+'px"></div></div>';
+  }).join('');
+  var sHTML = '<div class="stars">' + [1,2,3,4,5].map(function(i){ return '<div class="star'+(i<=r.strength?' on':'')+'"></div>'; }).join('') + '</div>';
+  var probLbl = r.tier === 'hi' ? '✓ Strong setup' : r.tier === 'md' ? '~ Moderate setup' : '✗ Weak setup';
+  return '<div class="card ' + (r.trend==='bullish'?'bull':'bear') + '">' +
+    '<div class="card-top">' +
+      '<div class="card-head">' +
+        '<div><div class="ticker">' + r.ticker + '</div><div class="price">$' + r.price.toFixed(2) + '</div></div>' +
+        '<span class="chg ' + chgCls + '">' + chgStr + '</span>' +
+        '<span class="dir ' + (r.trend==='bullish'?'bull':'bear') + '">' + (r.trend==='bullish'?'↑ BULL':'↓ BEAR') + '</span>' +
       '</div>' +
-      '<div class="action-hint"><p><strong>→</strong> ' + r.action + '</p></div>' +
-      '<div class="meta-row">' +
-        '<div class="meta-i">vol <span>' + r.relVol + 'x</span></div>' +
-        '<div class="meta-i">ATR <span>' + r.atrPct + '%</span></div>' +
-        (r.brokeLevel ? '<div class="meta-i"><span>⚡ broke level</span></div>' : '') +
-        (r.volUp ? '<div class="meta-i"><span>📈 vol rising</span></div>' : '') +
+      '<div class="prob-hdr"><span class="prob-title">50% GAIN PROB · 2-WK</span><span class="prob-pct ' + r.tier + '">' + r.prob + '%</span></div>' +
+      '<div class="prob-bar"><div class="prob-fill ' + r.tier + '" style="width:' + r.prob + '%"></div></div>' +
+      '<div class="prob-sub ' + r.tier + '">' + probLbl + ' · ' + (r.factors.slice(0,2).join(' · ') || '') + '</div>' +
+      '<div class="candles">' + cHTML + '</div>' +
+      sHTML +
+    '</div>' +
+    '<div class="action-hint"><p><strong>→</strong> ' + r.action + '</p></div>' +
+    '<div class="meta-row">' +
+      '<div class="meta-i">vol <span>' + r.relVol + 'x</span></div>' +
+      '<div class="meta-i">ATR <span>' + r.atrPct + '%</span></div>' +
+      (r.brokeLevel ? '<div class="meta-i"><span>⚡ broke level</span></div>' : '') +
+      (r.volUp ? '<div class="meta-i"><span>📈 vol rising</span></div>' : '') +
+    '</div>' +
+  '</div>';
+}
+
+// ══════════ TICKER LOOKUP ══════════
+async function runLookup() {
+  var ticker = document.getElementById('lookupInput').value.trim().toUpperCase();
+  if (!ticker) { showToast('Enter a ticker symbol', true); return; }
+  if (!apiKey) { showToast('Connect your API key first', true); return; }
+
+  var btn = document.getElementById('lookupBtn');
+  var res = document.getElementById('lookupResult');
+  btn.disabled = true; btn.textContent = '…';
+  res.innerHTML = '<div class="lookup-spinning">Scanning ' + ticker + '…</div>';
+
+  var sig = await analyze(ticker);
+  btn.disabled = false; btn.textContent = 'SCAN →';
+
+  if (!sig) {
+    res.innerHTML = '<div class="empty">No signal for <strong>' + ticker + '</strong> right now.<br>3-candle confirm not met or low volume.<br>Try again after market close.</div>';
+    return;
+  }
+
+  lastScannedTicker = sig.ticker;
+
+  // Build strike suggestion
+  var contractPrice = sig.atrPct < 5 ? '$0.05–$0.15/share' : '$0.10–$0.25/share';
+  var strike = sig.contractType === 'CALL'
+    ? 'Look for strike near $' + sig.strikeTarget.toFixed(2) + ' or just above'
+    : 'Look for strike near $' + sig.strikeTarget.toFixed(2) + ' or just below';
+
+  res.innerHTML = buildCard(sig) +
+    '<div style="background:#111418;border:1px solid #0a6648;border-radius:12px;padding:14px;margin-top:10px;">' +
+      '<div style="font-family:\'Space Mono\',monospace;font-size:10px;color:#64748b;margin-bottom:10px;letter-spacing:0.08em;">CONTRACT SUGGESTION</div>' +
+      '<div style="font-family:\'Space Mono\',monospace;font-size:13px;color:#22d3a0;margin-bottom:6px;">Buy a <strong>' + sig.contractType + '</strong></div>' +
+      '<div style="font-family:\'Space Mono\',monospace;font-size:11px;color:#e2e8f0;line-height:2;">' +
+        strike + '<br>' +
+        'Expiry: 2–4 weeks out<br>' +
+        'Price target: ' + contractPrice + '<br>' +
+        'Open interest: &gt; 50<br>' +
+        'Exit: +50% profit or −50% stop' +
+      '</div>' +
+      '<button onclick="prefillLog(\'' + sig.ticker + '\')" style="width:100%;margin-top:14px;padding:13px;background:#0d2e25;border:1px solid #0a6648;border-radius:8px;color:#22d3a0;font-family:\'Space Mono\',monospace;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;">LOG THIS TRADE →</button>' +
+    '</div>';
+}
+
+// ══════════ TRADE LOG ══════════
+function prefillLog(ticker) {
+  showTab('log');
+  setTimeout(function() { startLog('buy', ticker); }, 100);
+}
+
+function startLog(action, ticker) {
+  ticker = ticker || '';
+  logState = { action: action, ticker: ticker };
+
+  if (action === 'buy') {
+    if (ticker) {
+      showPricePrompt('buy', ticker);
+    } else {
+      // Ask for ticker first via the conversational box
+      var box = document.getElementById('convoBox');
+      box.innerHTML =
+        '<div class="convo-msg">' +
+          '<p>Which ticker did you buy? <span class="hl">Type it below:</span></p>' +
+          '<div style="display:flex;gap:8px;margin-top:10px;">' +
+            '<input type="text" id="logTickerInput" placeholder="NVDA" maxlength="8" autocorrect="off" autocapitalize="characters" spellcheck="false" ' +
+              'style="flex:1;background:#181c22;border:1px solid #2e3440;border-radius:8px;color:#e2e8f0;font-family:\'Space Mono\',monospace;font-size:18px;font-weight:700;padding:14px 12px;outline:none;text-transform:uppercase;" ' +
+              'oninput="this.value=this.value.toUpperCase()"/>' +
+            '<button onclick="confirmTicker()" style="padding:14px 18px;background:#0d2e25;border:1px solid #0a6648;border-radius:8px;color:#22d3a0;font-family:\'Space Mono\',monospace;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;">OK →</button>' +
+          '</div>' +
+        '</div>';
+    }
+  } else {
+    // Sell — find open trade
+    var open = trades.filter(function(t){ return !t.exitPrice; });
+    if (!open.length) {
+      showToast('No open trades to close', true);
+      resetConvo();
+      return;
+    }
+    if (open.length === 1) {
+      logState.tradeId = open[0].id;
+      logState.ticker = open[0].ticker;
+      showPricePrompt('sell', open[0].ticker);
+    } else {
+      // Multiple open — let them pick
+      var box = document.getElementById('convoBox');
+      box.innerHTML =
+        '<div class="convo-msg">' +
+          '<p>Which trade are you closing?</p>' +
+          '<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">' +
+          open.map(function(t) {
+            return '<button onclick="selectOpenTrade(\'' + t.id + '\')" style="padding:12px 14px;background:#181c22;border:1px solid #2e3440;border-radius:8px;color:#e2e8f0;font-family:\'Space Mono\',monospace;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;text-align:left;">' +
+              t.ticker + ' — entered $' + t.entryPrice.toFixed(2) + ' on ' + t.date +
+              '</button>';
+          }).join('') +
+          '</div>' +
+        '</div>';
+    }
+  }
+}
+
+function confirmTicker() {
+  var v = document.getElementById('logTickerInput').value.trim().toUpperCase();
+  if (!v) { showToast('Enter a ticker', true); return; }
+  logState.ticker = v;
+  showPricePrompt('buy', v);
+}
+
+function selectOpenTrade(id) {
+  var trade = trades.find(function(t){ return t.id === id; });
+  if (!trade) return;
+  logState.tradeId = id;
+  logState.ticker = trade.ticker;
+  showPricePrompt('sell', trade.ticker);
+}
+
+function showPricePrompt(action, ticker) {
+  // Hide convo box, show price prompt
+  document.getElementById('convoBox').style.display = 'none';
+  var prompt = document.getElementById('pricePrompt');
+  var q = document.getElementById('promptQ');
+  document.getElementById('priceInput').value = '';
+
+  if (action === 'buy') {
+    q.innerHTML = 'You bought <span class="hl">' + ticker + '</span> —<br>what did you pay <span class="hl2">per share</span>?';
+  } else {
+    var trade = trades.find(function(t){ return t.id === logState.tradeId; });
+    var entry = trade ? trade.entryPrice : null;
+    q.innerHTML = 'You sold <span class="hl">' + ticker + '</span>' +
+      (entry ? ' (entry was $' + entry.toFixed(2) + ')' : '') +
+      ' —<br>what did you sell for <span class="hl2">per share</span>?';
+  }
+
+  prompt.classList.add('show');
+  setTimeout(function(){ document.getElementById('priceInput').focus(); }, 200);
+}
+
+function confirmPrice() {
+  var val = parseFloat(document.getElementById('priceInput').value);
+  if (!val || val <= 0) { showToast('Enter a valid price', true); return; }
+
+  if (logState.action === 'buy') {
+    var trade = {
+      id: Date.now().toString(),
+      ticker: logState.ticker,
+      date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}),
+      entryDate: new Date().toISOString(),
+      entryPrice: val,
+      entryCost: Math.round(val * 100 * 100) / 100, // 1 contract = 100 shares
+      exitPrice: null,
+      direction: 'unknown'
+    };
+    trades.unshift(trade);
+    saveTrades();
+    syncToSheets(trade, 'buy');
+    showToast('✓ ' + logState.ticker + ' buy logged at $' + val.toFixed(2));
+  } else {
+    var trade = trades.find(function(t){ return t.id === logState.tradeId; });
+    if (!trade) { showToast('Trade not found', true); cancelLog(); return; }
+    trade.exitPrice = val;
+    trade.exitDate = new Date().toISOString();
+    trade.exitValue = Math.round(val * 100 * 100) / 100;
+    var pnl = Math.round((val - trade.entryPrice) * 100 * 100) / 100;
+    var pct = Math.round(((val - trade.entryPrice) / trade.entryPrice) * 10000) / 100;
+    trade.pnl = pnl;
+    trade.pctGain = pct;
+    trade.result = pct >= 50 ? '🎯 TARGET' : pct <= -50 ? '🛑 STOPPED' : pct > 0 ? '✓ WIN' : '✗ LOSS';
+    saveTrades();
+    syncToSheets(trade, 'sell');
+    var emoji = pct >= 50 ? '🎯' : pct > 0 ? '✓' : '✗';
+    showToast(emoji + ' ' + trade.ticker + ' closed ' + (pct > 0 ? '+' : '') + pct + '% ($' + (pnl > 0 ? '+' : '') + pnl.toFixed(2) + ')');
+  }
+
+  cancelLog();
+  renderTrades();
+}
+
+function cancelLog() {
+  logState = null;
+  document.getElementById('pricePrompt').classList.remove('show');
+  document.getElementById('priceInput').value = '';
+  document.getElementById('convoBox').style.display = 'block';
+  resetConvo();
+}
+
+function resetConvo() {
+  document.getElementById('convoBox').innerHTML =
+    '<div class="convo-msg">' +
+      '<p id="convoText">What happened? Tap a button below to log a trade.</p>' +
+    '</div>' +
+    '<div class="convo-btns">' +
+      '<button class="buy-btn" onclick="startLog(\'buy\')">↑ I BOUGHT IT</button>' +
+      '<button class="sell-btn" onclick="startLog(\'sell\')">↓ I SOLD IT</button>' +
+    '</div>';
+}
+
+function closeTrade(id) {
+  var trade = trades.find(function(t){ return t.id === id; });
+  if (!trade) return;
+  logState = { action: 'sell', ticker: trade.ticker, tradeId: id };
+  showTab('log');
+  setTimeout(function(){ showPricePrompt('sell', trade.ticker); }, 100);
+}
+
+function saveTrades() {
+  localStorage.setItem('trade_log', JSON.stringify(trades));
+}
+
+function renderTrades() {
+  var open   = trades.filter(function(t){ return !t.exitPrice; });
+  var closed = trades.filter(function(t){ return t.exitPrice != null; });
+  var wins   = closed.filter(function(t){ return t.pnl > 0; });
+  var totalPnl = closed.reduce(function(s,t){ return s + (t.pnl||0); }, 0);
+  var winRate = closed.length ? Math.round((wins.length / closed.length) * 100) : 0;
+
+  // Open count badge
+  document.getElementById('openCount').textContent = open.length ? open.length + ' OPEN' : '';
+
+  // Summary bar
+  var sb = document.getElementById('summaryBar');
+  if (trades.length) {
+    sb.style.display = 'grid';
+    sb.innerHTML =
+      '<div class="sum-box"><div class="sum-val">' + trades.length + '</div><div class="sum-lbl">TRADES</div></div>' +
+      '<div class="sum-box"><div class="sum-val a">' + open.length + '</div><div class="sum-lbl">OPEN</div></div>' +
+      '<div class="sum-box"><div class="sum-val g">' + winRate + '%</div><div class="sum-lbl">WIN RATE</div></div>' +
+      '<div class="sum-box"><div class="sum-val ' + (totalPnl >= 0 ? 'g' : 'r') + '">' + (totalPnl >= 0 ? '+' : '') + '$' + Math.abs(totalPnl).toFixed(0) + '</div><div class="sum-lbl">TOTAL P&L</div></div>';
+  } else {
+    sb.style.display = 'none';
+  }
+
+  // Trade rows
+  var el = document.getElementById('tradeRows');
+  if (!trades.length) {
+    el.innerHTML = '<div class="empty">No trades logged yet.<br>Tap "I Bought It" after you enter a trade.</div>';
+    return;
+  }
+  el.innerHTML = trades.map(function(t) {
+    var isOpen = !t.exitPrice;
+    var pnlHtml = '';
+    if (isOpen) {
+      pnlHtml = '<span class="trade-pnl open">OPEN</span>';
+    } else {
+      var cls = t.pnl >= 0 ? 'win' : 'loss';
+      pnlHtml = '<span class="trade-pnl ' + cls + '">' + (t.pnl >= 0 ? '+' : '') + '$' + t.pnl.toFixed(2) +
+        ' (' + (t.pctGain >= 0 ? '+' : '') + t.pctGain + '%)</span>';
+    }
+    return '<div class="trade-row">' +
+      '<div class="trade-row-head">' +
+        '<div class="trade-ticker">' + t.ticker + '</div>' +
+        (isOpen ? '<span style="font-family:\'Space Mono\',monospace;font-size:10px;padding:3px 8px;border-radius:4px;background:#1a1500;color:#fbbf24;border:1px solid #7a6000;">OPEN</span>' : '<span style="font-family:\'Space Mono\',monospace;font-size:10px;color:#64748b;">' + (t.result || '') + '</span>') +
+        '<div class="trade-date">' + t.date + '</div>' +
+      '</div>' +
+      '<div class="trade-entry">Entry: <span class="ev">$' + t.entryPrice.toFixed(2) + '/share</span> · Cost: <span class="ev">$' + (t.entryCost || (t.entryPrice*100)).toFixed(2) + '</span>' +
+        (t.exitPrice ? ' · Exit: <span class="ev">$' + t.exitPrice.toFixed(2) + '/share</span>' : '') +
+      '</div>' +
+      '<div class="trade-status">' +
+        pnlHtml +
+        (isOpen ? '<button class="trade-sell-btn" onclick="closeTrade(\'' + t.id + '\')">SELL IT →</button>' : '') +
       '</div>' +
     '</div>';
   }).join('');
 }
 
+// ══════════ GOOGLE SHEETS SYNC ══════════
+async function syncToSheets(trade, type) {
+  if (!webAppUrl) return;
+  try {
+    var payload = {
+      date: trade.date,
+      ticker: trade.ticker,
+      direction: trade.direction || '',
+      entryPrice: trade.entryPrice,
+      exitPrice: trade.exitPrice || '',
+      entryCost: trade.entryCost || '',
+      exitValue: trade.exitValue || '',
+      pnl: trade.pnl || '',
+      pctGain: trade.pctGain || '',
+      result: trade.result || (type === 'buy' ? 'OPEN' : ''),
+      notes: type === 'sell' ? 'Closed via scanner app' : 'Entered via scanner app'
+    };
+    await fetch(webAppUrl, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  } catch(e) {
+    console.log('Sheets sync failed (non-critical):', e.message);
+  }
+}
+
+// ══════════ LOG ══════════
 function renderLog() {
   var el = document.getElementById('scanLogBox');
   if (!scanLog.length) { el.innerHTML = '<div class="hint">Run a scan first to see the log.</div>'; return; }
   el.innerHTML = scanLog.map(function(l) {
     return '<div class="log-line ' + (l.ok?'ok':'skip') + '">' + (l.ok?'✓':'✗') + ' ' + l.t + '  ' + l.msg + '</div>';
   }).join('');
+}
+
+// ══════════ TOAST ══════════
+function showToast(msg, err) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err ? ' err' : '') + ' show';
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
 }
 </script>
 </body>

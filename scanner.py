@@ -1,321 +1,329 @@
+#!/usr/bin/env python3
 """
-Budget Options Scanner v4 — Ty's Preferences
-Runs at 6PM Eastern after market close.
-
-KEY CHANGES FROM v3:
-- Switched to api.massive.com (Polygon.io rebrand)
-- Removed fetch_options() — snapshot/options endpoint requires paid plan
-- Signal only: ticker + direction + probability + suggested strike from candles
-- Contract price range corrected: $0.05-$0.25/share = $5-$25/contract
-- Find the actual contract in your broker after signal fires
+Nightly Options Scanner — End of Day
+Uses Massive.com free tier (/v2/aggs only)
+Scoring: RSI + Bollinger Bands + Volume + 3-Candle Confirm
+Target: contracts $0.02–$0.25/share, 2–4 week expiry
+Pushes to ntfy.sh topic: ragebudgetopt
 """
 
-import os
-import requests
+import os, time, math, json, urllib.request, urllib.parse
 from datetime import datetime, timedelta
 
-MASSIVE_KEY  = os.environ.get("POLYGON_KEY", "")   # reuse existing secret
-NTFY_TOPIC   = os.environ.get("NTFY_TOPIC",  "")
+# ─── CONFIG ───────────────────────────────────────────────
+API_KEY   = os.environ.get('POLYGON_KEY', '')
+NTFY_TOPIC = 'ragebudgetopt'
+BASE_URL  = 'https://api.massive.com'
 
-# ── TY'S STRATEGY PARAMETERS ─────────────────────────────────
-MIN_SIGNAL_STRENGTH = 4      # only notify on 4-5 star signals
-MIN_REL_VOLUME      = 0.8    # today's volume at least 80% of 10-day avg
-DAYS_BACK           = 25     # candle lookback period
-TARGET_GAIN         = 0.50   # 50% profit target
-# Contract to look for in broker after signal:
-CONTRACT_MIN        = 0.05   # $0.05/share = $5/contract
-CONTRACT_MAX        = 0.25   # $0.25/share = $25/contract
-# ─────────────────────────────────────────────────────────────
-
+# 62 tickers — $3–$25 stock price range, liquid options, 
+# contracts naturally land in $0.02–$0.25/share range
 WATCHLIST = [
-    # Low priced stocks with active options
-    "SNDL","SOFI","VALE","ITUB","BBD","GRAB","MARA","RIOT","CLSK","WULF",
-    "HIMS","OPEN","SENS","EXPR","ZIM","CLOV","TLRY","SIRI","NOK","PLUG",
-    "ENVX","CIFR","BITF","HIVE","IDEX","MVIS","SPWR","ATER","GNUS","GOEV",
-    # Higher priced stocks that often have cheap OTM contracts
-    "AMD","NVDA","TSLA","AMZN","META","GOOGL","MSFT","AAPL","BAC","F",
-    "GE","INTC","PFE","T","WBA","KVUE","PARA","CMCSA","NIO","XPEV",
-    "LI","RIVN","LCID","JOBY","ACHR","UBER","LYFT","SNAP","PINS","PLTR",
-    "HOOD","COIN","RBLX","U","DKNG","PENN","AFRM","UPST","WISH","WKHS"
+  # Fintech / Retail favorites
+  'SOFI','HOOD','AFRM','UPST','OPEN',
+  # Travel / Airlines
+  'JBLU','AAL','SAVE','CCL','NCLH',
+  # EV / Mobility
+  'RIVN','LCID','JOBY','ACHR','GOEV','WKHS',
+  # Crypto adjacent
+  'MARA','RIOT','CLSK','CIFR','WULF','BITF','COIN',
+  # China EV
+  'NIO','XPEV','LI',
+  # Tech / Social
+  'SNAP','PINS','RBLX','U','PLTR',
+  # Gaming / Betting
+  'DKNG','PENN',
+  # Energy / Green
+  'PLUG','SPWR','ENVX',
+  # Telecom / Old guard
+  'SIRI','NOK','T','PARA','CMCSA',
+  # Healthcare
+  'HIMS','SENS',
+  # Finance / Auto
+  'BAC','F',
+  # Asia / Emerging
+  'GRAB','VALE','ITUB','BBD','ZIM',
+  # Cannabis
+  'TLRY','SNDL',
+  # Speculative
+  'CLOV','EXPR','ATER','IDEX','MVIS','GNUS',
+  # Others
+  'KVUE','LYFT','UBER'
 ]
 
+DELAY = 13  # seconds between calls — stays under 5/min free tier limit
 
-def get(url):
-    try:
-        r = requests.get(url, timeout=12)
-        return r.json()
-    except Exception as e:
-        print(f"    Request error: {e}")
-        return {}
-
-
+# ─── FETCH CANDLES ─────────────────────────────────────────
 def fetch_candles(ticker):
-    end   = datetime.today()
-    start = end - timedelta(days=DAYS_BACK + 5)
-    url = (
-        f"https://api.massive.com/v2/aggs/ticker/{ticker}/range/1/day"
-        f"/{start.strftime('%Y-%m-%d')}/{end.strftime('%Y-%m-%d')}"
-        f"?adjusted=true&sort=asc&limit={DAYS_BACK}&apiKey={MASSIVE_KEY}"
-    )
-    return get(url).get("results", [])
+    end = datetime.now()
+    start = end - timedelta(days=60)
+    fmt = lambda d: d.strftime('%Y-%m-%d')
+    url = (f"{BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/"
+           f"{fmt(start)}/{fmt(end)}"
+           f"?adjusted=true&sort=asc&limit=50&apiKey={API_KEY}")
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'scanner/1.0'})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read())
+        return data.get('results', [])
+    except Exception as e:
+        print(f"  [{ticker}] fetch error: {e}")
+        return []
 
+# ─── INDICATORS ────────────────────────────────────────────
+def calc_rsi(bars, period=14):
+    if len(bars) < period + 1:
+        return None
+    closes = [b['c'] for b in bars]
+    gains, losses = 0, 0
+    for i in range(len(closes) - period, len(closes)):
+        chg = closes[i] - closes[i-1]
+        if chg > 0: gains += chg
+        else: losses += abs(chg)
+    avg_g = gains / period
+    avg_l = losses / period
+    if avg_l == 0: return 100
+    rs = avg_g / avg_l
+    return round(100 - (100 / (1 + rs)))
+
+def calc_bollinger(bars, period=20, mult=2):
+    if len(bars) < period:
+        return None
+    closes = [b['c'] for b in bars[-period:]]
+    mean = sum(closes) / period
+    variance = sum((c - mean)**2 for c in closes) / period
+    std = math.sqrt(variance)
+    upper = mean + mult * std
+    lower = mean - mult * std
+    width = (upper - lower) / mean
+    last = bars[-1]['c']
+    pct = (last - lower) / (upper - lower) if (upper - lower) != 0 else 0.5
+    return {'upper': upper, 'lower': lower, 'mid': mean, 'width': width, 'pct': pct}
+
+def calc_atr(bars, period=5):
+    if len(bars) < period + 1:
+        return None
+    slice_ = bars[-(period+1):]
+    atrs = []
+    for i in range(1, len(slice_)):
+        p, b = slice_[i-1], slice_[i]
+        atrs.append(max(b['h']-b['l'], abs(b['h']-p['c']), abs(b['l']-p['c'])))
+    return sum(atrs) / len(atrs)
 
 def candle_dir(b):
-    rng  = b["h"] - b["l"] or 0.01
-    body = abs(b["c"] - b["o"])
-    if body < rng * 0.05:
-        return "doji"
-    return "green" if b["c"] > b["o"] else "red"
+    rng = b['h'] - b['l'] or 0.01
+    body = abs(b['c'] - b['o'])
+    if body < rng * 0.05: return 'd'
+    return 'g' if b['c'] > b['o'] else 'r'
 
-
-def calc_probability(trend, rel_vol, vol_increasing, broke_level,
-                     change_pct, atr_pct):
-    score = 20
-
-    # Volume — most important speed indicator
-    if rel_vol >= 2.5:   score += 25
-    elif rel_vol >= 2.0: score += 20
-    elif rel_vol >= 1.5: score += 15
-    elif rel_vol >= 1.0: score += 8
-    else:                score -= 10
-
-    # Rising volume across 3 candles
-    if vol_increasing:   score += 12
-
-    # Broke key level
-    if broke_level:      score += 15
-
-    # Price momentum today
-    if trend == "bullish" and change_pct > 3:    score += 8
-    elif trend == "bullish" and change_pct > 1:  score += 4
-    elif trend == "bearish" and change_pct < -3: score += 8
-    elif trend == "bearish" and change_pct < -1: score += 4
-
-    # ATR — reward moderate volatility, penalize erratic
-    if 2 < atr_pct < 8:  score += 5
-    elif atr_pct >= 8:   score -= 8
-
-    return min(95, max(5, score))
-
-
+# ─── ANALYZE ───────────────────────────────────────────────
 def analyze(ticker):
     bars = fetch_candles(ticker)
-    if len(bars) < 6:
-        print(f"    {ticker} — not enough bars ({len(bars)})")
+    if len(bars) < 22:
+        print(f"  [{ticker}] not enough bars ({len(bars)})")
         return None
 
-    last       = bars[-1]
-    prev       = bars[-2]
-    price      = last["c"]
-    change_pct = round(((last["c"] - prev["c"]) / prev["c"]) * 100, 2)
+    last = bars[-1]
+    prev = bars[-2]
+    price = last['c']
 
-    # 3-candle confirmation
-    last3 = [candle_dir(bars[-3]), candle_dir(bars[-2]), candle_dir(bars[-1])]
-    gc    = last3.count("green")
-    rc    = last3.count("red")
-
-    if gc == 3:   trend = "bullish"
-    elif rc == 3: trend = "bearish"
-    else:
-        print(f"    {ticker} — no 3-candle ({gc}g {rc}r)")
+    # Price filter
+    if price < 2 or price > 60:
+        print(f"  [{ticker}] price ${price:.2f} out of range")
         return None
+
+    chg = round(((price - prev['c']) / prev['c']) * 10000) / 100
 
     # Volume
-    recent_vols = [b["v"] for b in bars[-11:-1] if "v" in b]
-    avg_vol     = sum(recent_vols) / len(recent_vols) if recent_vols else 1
-    today_vol   = last.get("v", 0)
-    rel_vol     = round(today_vol / avg_vol, 1) if avg_vol > 0 else 0
+    vol_bars = [b['v'] for b in bars[-11:-1]]
+    avg_vol = sum(vol_bars) / len(vol_bars) if vol_bars else 1
+    rel_vol = round((last.get('v', 0) / avg_vol) * 10) / 10
+    vol_up = (bars[-1].get('v',0) > bars[-2].get('v',0) and
+              bars[-2].get('v',0) > bars[-3].get('v',0))
 
-    if rel_vol < MIN_REL_VOLUME:
-        print(f"    {ticker} — low rel volume ({rel_vol}x)")
+    # Indicators
+    rsi = calc_rsi(bars, 14)
+    bb  = calc_bollinger(bars, 20, 2)
+    atr = calc_atr(bars, 5)
+    atr_pct = round((atr / price) * 1000) / 10 if atr else 0
+
+    # 3-candle confirmation
+    last5 = bars[-5:]
+    dirs = [candle_dir(b) for b in last5[-3:]]
+    gc = dirs.count('g')
+    rc = dirs.count('r')
+    candle_conf = 'bull' if gc == 3 else 'bear' if rc == 3 else None
+
+    # Support / Resistance
+    res = round(max(b['h'] for b in last5) * 100) / 100
+    sup = round(min(b['l'] for b in last5) * 100) / 100
+
+    # ── SCORING ──
+    bull_score, bear_score = 0, 0
+
+    # RSI
+    if rsi is not None:
+        if rsi < 35:   bull_score += 30
+        elif rsi < 45: bull_score += 15
+        elif rsi > 65: bear_score += 30
+        elif rsi > 55: bear_score += 15
+
+    # Bollinger
+    if bb:
+        if bb['pct'] < 0.2 and bb['width'] < 0.08:  bull_score += 25
+        elif bb['pct'] < 0.25:                        bull_score += 15
+        elif bb['pct'] > 0.8 and bb['width'] < 0.08: bear_score += 25
+        elif bb['pct'] > 0.75:                        bear_score += 15
+
+    # Volume
+    if rel_vol >= 2.5:   bull_score += 15; bear_score += 15
+    elif rel_vol >= 1.5: bull_score += 8;  bear_score += 8
+    elif rel_vol < 0.7:  bull_score -= 10; bear_score -= 10
+    if vol_up:           bull_score += 8;  bear_score += 5
+
+    # Candle confirm
+    if candle_conf == 'bull':   bull_score += 20
+    elif candle_conf == 'bear': bear_score += 20
+
+    # ATR
+    if 2 <= atr_pct <= 10: bull_score += 5; bear_score += 5
+    elif atr_pct < 2:      bull_score -= 5; bear_score -= 5
+
+    # Determine direction
+    if bull_score > bear_score and bull_score >= 30:
+        trend = 'BULLISH'
+        score = min(95, max(5, bull_score))
+        contract_type = 'CALL'
+        strike = res
+    elif bear_score > bull_score and bear_score >= 30:
+        trend = 'BEARISH'
+        score = min(95, max(5, bear_score))
+        contract_type = 'PUT'
+        strike = sup
+    else:
+        print(f"  [{ticker}] no clear signal (bull:{bull_score} bear:{bear_score})")
         return None
 
-    vol_increasing = (
-        bars[-1].get("v", 0) > bars[-2].get("v", 0) and
-        bars[-2].get("v", 0) > bars[-3].get("v", 0)
-    )
+    tier = 'STRONG' if score >= 65 else 'MODERATE' if score >= 45 else 'WEAK'
 
-    # Support / resistance from last 10 bars
-    last10     = bars[-10:]
-    resistance = round(max(b["h"] for b in last10), 2)
-    support    = round(min(b["l"] for b in last10), 2)
-    broke_level = (
-        (trend == "bullish" and last["c"] >= resistance * 0.985) or
-        (trend == "bearish" and last["c"] <= support    * 1.015)
-    )
-
-    # ATR % (avg true range as % of price, last 5 bars)
-    last5 = bars[-5:]
-    atrs  = []
-    for i in range(1, len(last5)):
-        b = last5[i]; p = last5[i-1]
-        atrs.append(max(b["h"] - b["l"], abs(b["h"] - p["c"]), abs(b["l"] - p["c"])))
-    atr     = sum(atrs) / len(atrs) if atrs else 0
-    atr_pct = round((atr / price) * 100, 1)
-
-    probability = calc_probability(
-        trend, rel_vol, vol_increasing, broke_level, change_pct, atr_pct
-    )
-
-    strength = min(5, max(1,
-        2 +
-        (1 if vol_increasing else 0) +
-        (1 if rel_vol >= 1.5 else 0) +
-        (1 if broke_level else 0)
-    ))
-
-    contract_type  = "CALL" if trend == "bullish" else "PUT"
-    target_strike  = resistance if trend == "bullish" else support
-    vol_note       = " with rising volume" if vol_increasing else ""
-    rel_note       = f" ({rel_vol}x avg vol)"
-
-    reason = (
-        f"3 green candles{vol_note}{rel_note} — pushing toward ${resistance} resistance"
-        if trend == "bullish" else
-        f"3 red candles{vol_note}{rel_note} — breaking below ${support} support"
-    )
+    print(f"  [{ticker}] ✓ ${price:.2f} {trend} score:{score} RSI:{rsi} vol:{rel_vol}x BB:{round(bb['pct']*100) if bb else 'n/a'}%")
 
     return {
-        "ticker":        ticker,
-        "price":         round(price, 2),
-        "change_pct":    change_pct,
-        "trend":         trend,
-        "resistance":    resistance,
-        "support":       support,
-        "broke_level":   broke_level,
-        "rel_vol":       rel_vol,
-        "vol_increasing":vol_increasing,
-        "contract_type": contract_type,
-        "target_strike": round(target_strike, 2),
-        "atr_pct":       atr_pct,
-        "probability":   probability,
-        "strength":      strength,
-        "reason":        reason,
+        'ticker': ticker,
+        'price': price,
+        'chg': chg,
+        'trend': trend,
+        'score': score,
+        'tier': tier,
+        'rsi': rsi,
+        'rel_vol': rel_vol,
+        'vol_up': vol_up,
+        'atr_pct': atr_pct,
+        'contract_type': contract_type,
+        'strike': strike,
+        'res': res,
+        'sup': sup,
     }
 
+# ─── PUSH NOTIFICATION ────────────────────────────────────
+def push_signal(sig):
+    direction = '↑' if sig['trend'] == 'BULLISH' else '↓'
+    vol_tag = '🔥' if sig['rel_vol'] >= 2.0 else '📈' if sig['rel_vol'] >= 1.5 else ''
 
-def send_notification(title, body, priority="high"):
-    if not NTFY_TOPIC:
-        print("No NTFY_TOPIC — skipping")
-        return
-    try:
-        requests.post(
-            f"https://ntfy.sh/{NTFY_TOPIC}",
-            data=body.encode("utf-8"),
-            headers={
-                "Title":    title,
-                "Priority": priority,
-                "Tags":     "chart_increasing,moneybag",
-            },
-            timeout=10,
-        )
-        print(f"Notification sent: {title}")
-    except Exception as e:
-        print(f"Notification error: {e}")
-
-
-def format_signal(r):
-    stars  = "★" * r["strength"] + "☆" * (5 - r["strength"])
-    chg    = f"+{r['change_pct']}%" if r["change_pct"] > 0 else f"{r['change_pct']}%"
-    prob   = f"{r['probability']}% prob"
-    vol    = f"vol:{r['rel_vol']}x"
-    atr    = f"ATR:{r['atr_pct']}%"
-    broke  = " ⚡broke level" if r["broke_level"] else ""
-    action = (
-        f"In broker: {r['contract_type']} near ${r['target_strike']} strike · "
-        f"2-4 wk expiry · find $0.05-$0.25/share contract · OI > 50"
-    )
-
-    return (
-        f"{r['ticker']}  ${r['price']}  ({chg})  {prob}\n"
-        f"  → {stars} · {vol} · {atr}{broke}\n"
-        f"  → {action}\n"
-        f"  {r['reason']}"
-    )
-
-
-def main():
-    now = datetime.utcnow()
-    print(f"\n{'='*60}")
-    print(f"Budget Options Scanner v4 — Ty's Preferences")
-    print(f"UTC: {now.strftime('%Y-%m-%d %H:%M')} | Tickers: {len(WATCHLIST)}")
-    print(f"Contract to find in broker: ${CONTRACT_MIN}-${CONTRACT_MAX}/share "
-          f"(${int(CONTRACT_MIN*100)}-${int(CONTRACT_MAX*100)}/contract)")
-    print(f"No stock price cap — contract price is what matters")
-    print(f"Data: api.massive.com (free tier — candles only)")
-    print(f"{'='*60}\n")
-
-    if not MASSIVE_KEY:
-        send_notification("Scanner Error", "POLYGON_KEY secret not set in GitHub.")
-        return
-
-    results = []
-    for ticker in WATCHLIST:
-        print(f"Checking {ticker}...", end=" ", flush=True)
-        sig = analyze(ticker)
-        if sig:
-            results.append(sig)
-            print(f"${sig['price']} — {sig['trend']} — {sig['probability']}% prob — vol {sig['rel_vol']}x")
-        else:
-            print("no setup")
-
-    results.sort(key=lambda x: x["probability"], reverse=True)
-    strong = [r for r in results if r["probability"] >= 65]
-
-    print(f"\n{'─'*60}")
-    print(f"Total signals: {len(results)} | Strong (65%+): {len(strong)}")
-
-    tomorrow = (datetime.today() + timedelta(days=1)).strftime("%A %b %-d")
-
-    if not results:
-        send_notification(
-            "Scanner: No setups tonight",
-            f"Scanned {len(WATCHLIST)} tickers.\n"
-            f"No 3-candle confirmations with sufficient volume.\n"
-            f"Rest up — better setups tomorrow.",
-            priority="low"
-        )
-        return
-
-    if not strong:
-        lines = "\n\n".join(format_signal(r) for r in results[:4])
-        send_notification(
-            f"Scanner: {len(results)} weak signal(s) for {tomorrow}",
-            f"No high-probability setups tonight. Proceed with caution.\n\n"
-            f"{lines}\n\n"
-            f"Wait for price confirmation at 10:15 AM before entering.",
-            priority="default"
-        )
-        return
-
-    bullish = [r for r in strong if r["trend"] == "bullish"]
-    bearish = [r for r in strong if r["trend"] == "bearish"]
-    lines   = "\n\n".join(format_signal(r) for r in strong[:5])
+    title = f"{direction} {sig['ticker']} — {sig['tier']} {sig['score']}% {vol_tag}"
 
     body = (
-        f"{len(bullish)} bullish · {len(bearish)} bearish\n"
-        f"Filtered: 3-candle confirm · volume · ATR\n\n"
-        f"{lines}\n\n"
-        f"── PLAN FOR TOMORROW ──\n"
-        f"Wait until 10:15 AM — let open volatility settle.\n"
-        f"In broker: find {contract_type_hint(strong)} near suggested strike.\n"
-        f"Look for $0.05-$0.25/share ($5-$25/contract), OI > 50, 2-4 wk expiry.\n"
-        f"Target: +50% exit · Stop: -50% cut"
+        f"${sig['price']:.2f} ({'+' if sig['chg']>0 else ''}{sig['chg']:.2f}%)\n"
+        f"Signal: {sig['trend']} | RSI: {sig['rsi']} | Vol: {sig['rel_vol']}x\n"
+        f"ATR: {sig['atr_pct']}%\n"
+        f"→ Buy {sig['contract_type']} near ${sig['strike']:.2f} strike\n"
+        f"→ Expiry 2–4 wks · price $0.02–$0.25/sh · OI > 50\n"
+        f"→ Exit: +50% profit | −50% stop"
     )
 
-    send_notification(
-        f"{len(strong)} strong signal{'s' if len(strong) > 1 else ''} for {tomorrow}",
-        body
+    try:
+        data = body.encode('utf-8')
+        req = urllib.request.Request(
+            f"https://ntfy.sh/{NTFY_TOPIC}",
+            data=data,
+            headers={
+                'Title': title,
+                'Priority': 'high' if sig['score'] >= 65 else 'default',
+                'Tags': 'chart_with_upwards_trend' if sig['trend']=='BULLISH' else 'chart_with_downwards_trend',
+            },
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=10):
+            pass
+        print(f"  Pushed: {title}")
+    except Exception as e:
+        print(f"  Push error: {e}")
+
+# ─── SUMMARY PUSH ──────────────────────────────────────────
+def push_summary(signals):
+    if not signals:
+        try:
+            data = "No setups met scoring threshold tonight. Try again tomorrow.".encode()
+            req = urllib.request.Request(
+                f"https://ntfy.sh/{NTFY_TOPIC}", data=data,
+                headers={'Title': 'Nightly Scan — No Signals', 'Priority': 'low'},
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=10): pass
+        except: pass
+        return
+
+    strong = [s for s in signals if s['score'] >= 65]
+    summary = (
+        f"Scanned {len(WATCHLIST)} tickers\n"
+        f"Signals found: {len(signals)} ({len(strong)} strong ★)\n"
+        f"Best: {', '.join([s['ticker'] for s in signals[:3]])}"
     )
-    print("\nDone.")
+    try:
+        req = urllib.request.Request(
+            f"https://ntfy.sh/{NTFY_TOPIC}",
+            data=summary.encode(),
+            headers={
+                'Title': f"📊 Nightly Scan Complete — {len(signals)} signals",
+                'Priority': 'default',
+            },
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=10): pass
+    except: pass
 
+# ─── MAIN ──────────────────────────────────────────────────
+def main():
+    print(f"\n{'='*50}")
+    print(f"Nightly Scanner — {datetime.now().strftime('%Y-%m-%d %H:%M ET')}")
+    print(f"Tickers: {len(WATCHLIST)} | Delay: {DELAY}s | Free tier")
+    print(f"{'='*50}\n")
 
-def contract_type_hint(signals):
-    types = set(r["contract_type"] for r in signals)
-    if types == {"CALL"}:   return "CALLs"
-    if types == {"PUT"}:    return "PUTs"
-    return "CALLs/PUTs"
+    if not API_KEY:
+        print("ERROR: POLYGON_KEY secret not set in GitHub Actions")
+        return
 
+    signals = []
 
-if __name__ == "__main__":
+    for i, ticker in enumerate(WATCHLIST):
+        print(f"[{i+1}/{len(WATCHLIST)}] {ticker}")
+        sig = analyze(ticker)
+        if sig:
+            signals.append(sig)
+            push_signal(sig)
+            time.sleep(2)  # small pause between pushes so phone isn't spammed
+        time.sleep(DELAY)
+
+    # Sort by score, push summary
+    signals.sort(key=lambda s: s['score'], reverse=True)
+    push_summary(signals)
+
+    print(f"\n{'='*50}")
+    print(f"Done. {len(signals)} signals found.")
+    if signals:
+        print("\nTop signals:")
+        for s in signals[:5]:
+            print(f"  {s['ticker']:6} {s['trend']:8} score:{s['score']} {s['contract_type']} near ${s['strike']:.2f}")
+    print(f"{'='*50}\n")
+
+if __name__ == '__main__':
     main()

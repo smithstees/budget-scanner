@@ -147,7 +147,7 @@ def build_notification(setups, skipped):
     timestamp = datetime.now().strftime("%I:%M %p ET")
 
     if not setups:
-        title = f"[CHATTY] No setups found — {timestamp}"
+        title = f"[CHATTY] No setups found - {timestamp}"
         body  = "SNAP, F, JBLU, IWM scanned. No qualifying dips today.\n\nCheck again tomorrow or watch for intraday moves."
         return title, body
 

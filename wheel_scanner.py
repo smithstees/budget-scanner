@@ -24,6 +24,13 @@ Pushes to ntfy.sh topic: ragebudgetopt
 import os, time, math, json, urllib.request
 from datetime import datetime, timedelta
 
+def _ascii(s):
+    # ntfy Title header must be latin-1 safe. Strip fancy unicode.
+    return (s.replace("\u2014", "-").replace("\u2013", "-")
+             .replace("\u2022", "*").replace("\u00b7", "-")
+             .replace("\u2605", "*").replace("\u2606", "*")
+             .replace("\u26a1", "!").encode("ascii", "ignore").decode("ascii"))
+
 NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
 YAHOO_URL  = 'https://query1.finance.yahoo.com/v8/finance/chart/'
 
@@ -212,7 +219,7 @@ def push(title, body, priority='default'):
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=body.encode('utf-8'),
             headers={
-                'Title': title.encode('utf-8'),
+                'Title': _ascii(title),
                 'Priority': priority,
                 'Tags': 'moneybag,seedling',
                 'Content-Type': 'text/plain; charset=utf-8',

@@ -15,6 +15,13 @@ Pushes to ntfy.sh topic: ragebudgetopt
 import os, time, math, json, urllib.request
 from datetime import datetime, timedelta
 
+def _ascii(s):
+    # ntfy Title header must be latin-1 safe. Strip fancy unicode (— ★ ⚡ etc.)
+    return (s.replace("\u2014", "-").replace("\u2013", "-")
+             .replace("\u2022", "*").replace("\u00b7", "-")
+             .replace("\u2605", "*").replace("\u2606", "*")
+             .replace("\u26a1", "!").encode("ascii", "ignore").decode("ascii"))
+
 NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
 YAHOO_URL  = 'https://query1.finance.yahoo.com/v8/finance/chart/'
 
@@ -242,7 +249,7 @@ def push_signal(sig):
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=data,
             headers={
-                'Title': title.encode('utf-8'),
+                'Title': _ascii(title),
                 'Priority': 'high' if sig['score'] >= 65 else 'default',
                 'Tags': 'zap,chart_with_upwards_trend' if sig['trend']=='BULLISH' else 'zap,chart_with_downwards_trend',
                 'Content-Type': 'text/plain; charset=utf-8',
@@ -269,7 +276,7 @@ def push_summary(signals, pushed):
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=msg.encode('utf-8'),
             headers={
-                'Title': title.encode('utf-8'),
+                'Title': _ascii(title),
                 'Priority': 'default' if pushed else 'low',
                 'Content-Type': 'text/plain; charset=utf-8',
             },

@@ -209,6 +209,13 @@ def analyze(ticker, meta):
 
 # ── Notification ──────────────────────────────────────────────────────────────
 
+def _ascii(s):
+    # ntfy Title header must be latin-1 safe. Strip fancy unicode (— ★ ⚡ etc.)
+    return (s.replace("\u2014", "-").replace("\u2013", "-")
+             .replace("\u2022", "*").replace("\u00b7", "-")
+             .replace("\u2605", "*").replace("\u2606", "*")
+             .replace("\u26a1", "!").encode("ascii", "ignore").decode("ascii"))
+
 def send_notification(title, body, priority="high"):
     if not NTFY_TOPIC:
         print("No NTFY_TOPIC set")
@@ -218,7 +225,7 @@ def send_notification(title, body, priority="high"):
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=body.encode("utf-8"),
             headers={
-                "Title":    title,
+                "Title":    _ascii(title),
                 "Priority": priority,
                 "Tags":     "chart_with_upwards_trend,moneybag",
             },

@@ -24,6 +24,13 @@ PRIOR REVISIONS:
 import os, time, math, json, urllib.request, urllib.parse
 from datetime import datetime, timedelta
 
+def _ascii(s):
+    # ntfy Title header must be latin-1 safe. Strip fancy unicode.
+    return (s.replace("\u2014", "-").replace("\u2013", "-")
+             .replace("\u2022", "*").replace("\u00b7", "-")
+             .replace("\u2605", "*").replace("\u2606", "*")
+             .replace("\u26a1", "!").encode("ascii", "ignore").decode("ascii"))
+
 # CONFIG
 API_KEY   = os.environ.get('POLYGON_KEY', '')
 NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
@@ -273,7 +280,7 @@ def push_signal(sig):
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=data,
             headers={
-                'Title': title.encode('utf-8'),
+                'Title': _ascii(title),
                 'Priority': 'high' if sig['score'] >= 65 else 'default',
                 'Tags': 'chart_with_upwards_trend' if sig['trend']=='BULLISH' else 'chart_with_downwards_trend',
                 'Content-Type': 'text/plain; charset=utf-8',
@@ -293,7 +300,7 @@ def push_summary(signals, pushed_count):
             req = urllib.request.Request(
                 f"https://ntfy.sh/{NTFY_TOPIC}", data=data,
                 headers={
-                    'Title': 'Nightly Scan - No Signals'.encode('utf-8'),
+                    'Title': 'Nightly Scan - No Signals',
                     'Priority': 'low',
                     'Content-Type': 'text/plain; charset=utf-8',
                 },
@@ -315,7 +322,7 @@ def push_summary(signals, pushed_count):
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=summary.encode('utf-8'),
             headers={
-                'Title': f"Nightly Scan Complete - {pushed_count} pushed".encode('utf-8'),
+                'Title': _ascii(f"Nightly Scan Complete - {pushed_count} pushed"),
                 'Priority': 'default',
                 'Content-Type': 'text/plain; charset=utf-8',
             },

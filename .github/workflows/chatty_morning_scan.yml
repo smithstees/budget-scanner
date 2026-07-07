@@ -2,7 +2,9 @@ name: Chatty Morning Scanner
 
 on:
   schedule:
+    # 10:30 AM ET primary + 11:00 AM ET backup (GitHub cron can skip runs on free tier)
     - cron: '30 14 * * 1-5'
+    - cron: '0 15 * * 1-5'
   workflow_dispatch:
 
 jobs:

@@ -1,9 +1,12 @@
 name: Live Options Scanner
 
-# On-demand: click "Run workflow" in the Actions tab whenever you want a
-# scan right now. Uses Yahoo Finance intraday data (no API key needed).
+# Twice daily during market hours + on-demand.
+# 10:15 AM ET and 2:15 PM ET on weekdays. Uses Yahoo Finance (no API key).
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '15 14 * * 1-5'  # 10:15 AM ET
+    - cron: '15 18 * * 1-5'  # 2:15 PM ET
 
 jobs:
   live-scan:

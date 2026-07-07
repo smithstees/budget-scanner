@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Budget Scanner">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0f17">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0f17'/%3E%3Cpath d='M20 70 L40 40 L55 55 L80 25' stroke='%2334d399' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='80' cy='25' r='6' fill='%2334d399'/%3E%3C/svg%3E">
+<title>Budget Scanner</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #0b0f17;
+    color: #e8ecf3;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overscroll-behavior-y: contain;
+  }
+  body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  header {
+    padding: 12px 16px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: #0b0f17;
+    border-bottom: 1px solid #1c2331;
+    z-index: 10;
+  }
+  header h1 { font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.2px; }
+  header .sub { font-size: 11px; color: #7d8ba0; margin-top: 2px; }
+  .scan-btn {
+    background: linear-gradient(135deg, #34d399, #10b981);
+    color: #06251a; font-weight: 700; font-size: 13px;
+    border: none; border-radius: 10px;
+    padding: 9px 14px; cursor: pointer;
+    box-shadow: 0 2px 10px rgba(52, 211, 153, 0.25);
+    transition: transform 0.1s, opacity 0.15s;
+  }
+  .scan-btn:active { transform: scale(0.96); }
+  .scan-btn:disabled { opacity: 0.5; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; background: #0f1420;
+    border-bottom: 1px solid #1c2331;
+    padding: 0 8px;
+    position: sticky; top: 51px; z-index: 9;
+  }
+  .tab {
+    flex: 1; padding: 12px 8px;
+    text-align: center;
+    font-size: 13px; font-weight: 600;
+    color: #7d8ba0;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+  }
+  .tab.active { color: #34d399; border-bottom-color: #34d399; }
+
+  .config-bar {
+    padding: 10px 16px;
+    display: flex; gap: 8px; overflow-x: auto;
+    border-bottom: 1px solid #1c2331;
+    background: #0f1420;
+    scrollbar-width: none;
+  }
+  .config-bar::-webkit-scrollbar { display: none; }
+  .chip {
+    background: #1c2331;
+    color: #cbd5e1;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .chip.active { background: #182f28; color: #34d399; border-color: #1f4a3e; }
+
+  .status {
+    padding: 8px 16px;
+    font-size: 12px; color: #7d8ba0;
+    background: #0f1420;
+    border-bottom: 1px solid #1c2331;
+  }
+  .status.error { color: #f87171; }
+  .status.warn  { color: #fbbf24; }
+  .status.ok    { color: #34d399; }
+
+  .progress {
+    height: 3px; background: #1c2331;
+    position: relative; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; background: linear-gradient(90deg, #34d399, #10b981);
+    width: 0%; transition: width 0.3s ease;
+  }
+
+  main { padding: 12px 12px 40px; }
+  .empty {
+    text-align: center; padding: 50px 20px; color: #7d8ba0;
+  }
+  .empty h2 { font-size: 16px; color: #cbd5e1; margin: 12px 0 6px; }
+  .empty p { font-size: 13px; margin: 4px 0; }
+  .empty .hint { font-size: 12px; color: #4b5563; margin-top: 20px; line-height: 1.6; }
+
+  .signal {
+    background: #131a26;
+    border: 1px solid #1f2a3d;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .signal.strong { border-color: #1f4a3e; background: linear-gradient(180deg, #131a26, #0f1f19); }
+  .signal.bearish { border-color: #4a1f2a; background: linear-gradient(180deg, #131a26, #1f0f13); }
+  .signal.wheel { border-color: #2f3a1f; background: linear-gradient(180deg, #131a26, #191f0f); }
+
+  .signal-head {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+  }
+  .ticker-block { display: flex; flex-direction: column; }
+  .ticker { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .price { font-size: 13px; color: #cbd5e1; margin-top: 2px; }
+  .change-up { color: #34d399; }
+  .change-dn { color: #f87171; }
+
+  .badge {
+    padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.3px; display: inline-flex; align-items: center; gap: 4px;
+    white-space: nowrap;
+  }
+  .badge.call  { background: #052e22; color: #34d399; border: 1px solid #1f4a3e; }
+  .badge.put   { background: #2e0510; color: #f87171; border: 1px solid #4a1f2a; }
+  .badge.wheel { background: #2a2e05; color: #eab308; border: 1px solid #4a3f1f; }
+
+  .score-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px; margin-top: 4px;
+  }
+  .metric {
+    background: #0f1420; border-radius: 8px; padding: 8px 6px;
+    text-align: center;
+  }
+  .metric .lbl { font-size: 9px; color: #7d8ba0; text-transform: uppercase; letter-spacing: 0.5px; }
+  .metric .val { font-size: 14px; font-weight: 700; color: #e8ecf3; margin-top: 2px; }
+
+  .action {
+    background: #0f1420; border-radius: 10px; padding: 10px 12px;
+    font-size: 12.5px; line-height: 1.55;
+  }
+  .action strong { color: #e8ecf3; }
+  .action .label { color: #7d8ba0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .action .est { color: #34d399; font-weight: 700; }
+  .action .warn { color: #fbbf24; }
+
+  .disclaim {
+    font-size: 11px; color: #4b5563;
+    text-align: center; padding: 20px 20px 40px;
+    line-height: 1.5;
+  }
+
+  .info-box {
+    background: #0f1420; border: 1px solid #1f2a3d;
+    border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 12px; color: #cbd5e1; line-height: 1.55;
+  }
+  .info-box strong { color: #e8ecf3; }
+  .info-box .head { color: #34d399; font-weight: 700; margin-bottom: 4px; font-size: 12.5px; }
+
+  .spinner {
+    display: inline-block; width: 12px; height: 12px;
+    border: 2px solid #1c2331; border-top-color: #34d399;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 4px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 id="pageTitle">Options Scanner</h1>
+    <div class="sub" id="lastRun">Tap Scan to start</div>
+  </div>
+  <button class="scan-btn" id="scanBtn">Scan</button>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="options">Options</div>
+  <div class="tab" data-tab="wheel">Wheel / CSP</div>
+</div>
+
+<div class="config-bar" id="chips"></div>
+
+<div class="status" id="status">Ready. Watchlist: <span id="tickerCount">0</span> tickers.</div>
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+<main>
+  <div id="results">
+    <div class="info-box">
+      <div class="head">📖 Runway Options Strategy</div>
+      Buy CALLs/PUTs <strong>30–45 days out</strong>, <strong>3–5 strikes OTM</strong>. Less theta bleed, better win-rate math.
+      <br><br>
+      <strong>Exit rule:</strong> Sell when stock is ~65% of the way to your strike (usually +80–200% gain).
+      <br>
+      <strong>Take HALF off at +50%</strong> — lock the win, let the rest ride free.
+      <br><br>
+      <strong>Stop:</strong> −60% on the contract, no exceptions.
+    </div>
+    <div class="empty">
+      <div style="font-size: 42px;">📱</div>
+      <h2>Ready to scan</h2>
+      <p>Tap "Scan" for live setups.</p>
+      <div class="hint">
+        Uses ~15-min delayed data. No login.<br>
+        Add to Home Screen: Share → Add to Home Screen
+      </div>
+    </div>
+  </div>
+  <div class="disclaim">
+    Educational tool only. Estimated premiums are rough — always verify real bid/ask in your broker before entering. Options can go to zero.
+  </div>
+</main>
+
+<script>
+// ── Watchlists ─────────────────────────────────────────────────────────────
+const WATCHLIST_OPTIONS = [
+  'SOFI','OPEN','JBLU','AAL','CCL','NCLH',
+  'RIVN','LCID','JOBY','ACHR','WKHS','NIO','XPEV','LI',
+  'MARA','RIOT','CLSK','CIFR','WULF',
+  'SNAP','PINS','TLRY','SNDL','CLOV','ATER','IDEX','MVIS',
+  'NOK','SIRI','T','SENS','GRAB','F','LYFT','PLUG','SPWR','ENVX',
+  'VALE','ITUB','BBD','ZIM'
+];
+// Wheel candidates: sub-$10 stocks you'd be OK holding
+const WATCHLIST_WHEEL = [
+  'SOFI','JBLU','F','NIO','SNAP','GRAB','PLUG','NOK',
+  'RIVN','LCID','JOBY','ACHR','SIRI',
+  'OPEN','TLRY','HIMS','SENS','MARA','RIOT','CLSK',
+  'PINS','SNDL','WKHS','LYFT','ENVX','VALE','ITUB','BBD',
+  'CIFR','WULF','XPEV','LI'
+];
+
+const FILTERS_OPTIONS = [
+  { id: 'good',   label: 'Good+ (55+)',       min: 55 },
+  { id: 'strong', label: 'Strong only (65+)', min: 65 },
+  { id: 'all',    label: 'All setups',        min: 0  },
+  { id: 'calls',  label: 'CALLs only',        min: 0, side: 'BULLISH' },
+  { id: 'puts',   label: 'PUTs only',         min: 0, side: 'BEARISH' },
+  { id: 'cheap',  label: '<$8 stocks',        min: 0, maxPrice: 8 }
+];
+const FILTERS_WHEEL = [
+  { id: 'good',    label: 'Best yield (50+)', min: 50 },
+  { id: 'strong',  label: 'Strong only (65+)', min: 65 },
+  { id: 'all',     label: 'All ideas',        min: 0  },
+  { id: 'cheap',   label: 'Under $500 col',   min: 0, maxCollateral: 500 }
+];
+let activeTab = 'options';
+let activeFilter = { options: 'good', wheel: 'good' };
+
+const STOCK_MIN = 2.0;
+const STOCK_MAX_OPTIONS = 15.0;
+const STOCK_MAX_WHEEL   = 10.0;
+const MIN_ANNUAL_YIELD  = 0.15;
+
+// CORS-friendly Yahoo chart proxies (fallback chain)
+const YAHOO_PROXIES = [
+  (t, r) => `https://corsproxy.io/?${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + t + '?interval=' + r.interval + '&range=' + r.range)}`,
+  (t, r) => `https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + t + '?interval=' + r.interval + '&range=' + r.range)}`,
+  (t, r) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + t + '?interval=' + r.interval + '&range=' + r.range)}`
+];
+
+// ── UI helpers ─────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function setStatus(msg, cls = '') {
+  const el = $('status');
+  el.className = 'status ' + cls;
+  el.innerHTML = msg;
+}
+function setProgress(p) { $('progressBar').style.width = p + '%'; }
+
+function currentFilters() {
+  return activeTab === 'options' ? FILTERS_OPTIONS : FILTERS_WHEEL;
+}
+function currentWatchlist() {
+  return activeTab === 'options' ? WATCHLIST_OPTIONS : WATCHLIST_WHEEL;
+}
+function currentActive() { return activeFilter[activeTab]; }
+function setActive(id) { activeFilter[activeTab] = id; }
+
+function renderChips() {
+  const bar = $('chips');
+  bar.innerHTML = '';
+  currentFilters().forEach(f => {
+    const c = document.createElement('span');
+    c.className = 'chip' + (f.id === currentActive() ? ' active' : '');
+    c.textContent = f.label;
+    c.onclick = () => {
+      setActive(f.id);
+      renderChips();
+      if (lastResults[activeTab].length) renderResults(lastResults[activeTab]);
+    };
+    bar.appendChild(c);
+  });
+}
+
+// ── Fetch with fallback proxies ────────────────────────────────────────────
+async function fetchYahoo(ticker, opts) {
+  let lastErr;
+  for (const buildUrl of YAHOO_PROXIES) {
+    try {
+      const url = buildUrl(ticker, opts);
+      const r = await fetch(url, { method: 'GET' });
+      if (!r.ok) { lastErr = 'HTTP ' + r.status; continue; }
+      const data = await r.json();
+      if (data && data.chart && data.chart.result) return data;
+    } catch (e) { lastErr = e.message; }
+  }
+  throw new Error(lastErr || 'all proxies failed');
+}
+
+function parseBars(data) {
+  const r = data.chart.result[0];
+  const meta = r.meta || {};
+  const prevClose = meta.previousClose || meta.chartPreviousClose;
+  const ts = r.timestamp || [];
+  const q  = (r.indicators && r.indicators.quote && r.indicators.quote[0]) || {};
+  const bars = [];
+  for (let i = 0; i < ts.length; i++) {
+    if (q.close[i] == null) continue;
+    bars.push({
+      t: ts[i],
+      o: q.open[i]   ?? q.close[i],
+      h: q.high[i]   ?? q.close[i],
+      l: q.low[i]    ?? q.close[i],
+      c: q.close[i],
+      v: (q.volume ? q.volume[i] : 0) || 0
+    });
+  }
+  return { bars, prevClose };
+}
+
+// ── Analytics ──────────────────────────────────────────────────────────────
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return null;
+  let g = 0, l = 0;
+  for (let i = closes.length - period; i < closes.length; i++) {
+    const c = closes[i] - closes[i-1];
+    if (c > 0) g += c; else l += Math.abs(c);
+  }
+  const ag = g / period, al = l / period;
+  if (al === 0) return 100;
+  const rs = ag / al;
+  return Math.round(100 - (100 / (1 + rs)));
+}
+
+function suggestStrike(price, direction) {
+  const step = price < 10 ? 0.50 : 1.00;
+  const otm = 4;
+  const rounded = Math.round(price / step) * step;
+  const s = direction === 'BULLISH' ? rounded + otm * step : rounded - otm * step;
+  return Math.round(s * 100) / 100;
+}
+
+function estOptionCost(price, atrPct) {
+  const base = 0.02 * price;
+  const boost = (atrPct / 100) * price * 0.8;
+  return Math.round((base + boost) * 100) / 100;
+}
+
+// ── Options mode: intraday scan ────────────────────────────────────────────
+function analyzeOptions(ticker, bars, prevClose) {
+  if (!bars || bars.length < 20 || !prevClose) return null;
+  const price = bars[bars.length - 1].c;
+  if (price < STOCK_MIN || price > STOCK_MAX_OPTIONS) return null;
+
+  const changePct = Math.round(((price - prevClose) / prevClose) * 10000) / 100;
+  const dayBars = bars.slice(-40);
+  const dayHigh = Math.max(...dayBars.map(b => b.h));
+  const dayLow  = Math.min(...dayBars.map(b => b.l));
+
+  const closes = bars.slice(-30).map(b => b.c);
+  const rsi = calcRSI(closes, 14);
+
+  const recent = bars.slice(-13);
+  const trs = [];
+  for (let i = 1; i < recent.length; i++) {
+    const p = recent[i-1], b = recent[i];
+    trs.push(Math.max(b.h - b.l, Math.abs(b.h - p.c), Math.abs(b.l - p.c)));
+  }
+  const atr = trs.reduce((a,b)=>a+b, 0) / (trs.length || 1);
+  const atrPct = Math.round((atr / price) * 10000) / 100;
+
+  const last12 = bars.slice(-12);
+  const prior12 = bars.slice(-24, -12);
+  const lastVol = last12.reduce((a,b)=>a+b.v, 0);
+  const priorVol = prior12.reduce((a,b)=>a+b.v, 0) || 1;
+  const relVol = Math.round((lastVol / priorVol) * 10) / 10;
+
+  const dayPos = (dayHigh > dayLow) ? (price - dayLow) / (dayHigh - dayLow) : 0.5;
+  const nearLow  = price <= dayLow  * 1.015;
+  const nearHigh = price >= dayHigh * 0.985;
+
+  let bull = 0, bear = 0;
+  if (rsi != null) {
+    if (rsi < 30) bull += 25;
+    else if (rsi < 40) bull += 15;
+    else if (rsi > 70) bear += 25;
+    else if (rsi > 60) bear += 15;
+  }
+  if (changePct <= -2.5 && nearLow) bull += 25;
+  else if (changePct <= -1.0 && nearLow) bull += 15;
+  else if (changePct >= 2.5 && nearHigh) bear += 25;
+  else if (changePct >= 1.0 && nearHigh) bear += 15;
+  if (dayPos < 0.20) bull += 15;
+  else if (dayPos < 0.35) bull += 8;
+  else if (dayPos > 0.80) bear += 15;
+  else if (dayPos > 0.65) bear += 8;
+  if (relVol >= 2.0) { bull += 12; bear += 12; }
+  else if (relVol >= 1.4) { bull += 6; bear += 6; }
+
+  const last3 = bars.slice(-3);
+  const greens = last3.filter(b => b.c > b.o).length;
+  const reds   = last3.filter(b => b.c < b.o).length;
+  if (greens >= 2 && changePct < 0) bull += 10;
+  if (reds   >= 2 && changePct > 0) bear += 10;
+
+  let trend, score, ctype, strike;
+  if (bull > bear && bull >= 25) {
+    trend = 'BULLISH'; score = Math.min(95, Math.max(5, bull));
+    ctype = 'CALL'; strike = suggestStrike(price, 'BULLISH');
+  } else if (bear > bull && bear >= 25) {
+    trend = 'BEARISH'; score = Math.min(95, Math.max(5, bear));
+    ctype = 'PUT'; strike = suggestStrike(price, 'BEARISH');
+  } else {
+    return null;
+  }
+  const tier = score >= 65 ? 'STRONG' : score >= 45 ? 'MODERATE' : 'WEAK';
+  const estCost = estOptionCost(price, atrPct);
+  const sellZone = trend === 'BULLISH'
+    ? Math.round((price + 0.65 * (strike - price)) * 100) / 100
+    : Math.round((price - 0.65 * (price - strike)) * 100) / 100;
+  return {
+    ticker, price, changePct, trend, score, tier,
+    rsi, relVol, atrPct, dayPos, dayHigh, dayLow,
+    contractType: ctype, strike, estCost, sellZone
+  };
+}
+
+// ── Wheel mode: daily bars + CSP calc ─────────────────────────────────────
+function analyzeWheel(ticker, bars) {
+  if (!bars || bars.length < 22) return null;
+  const price = bars[bars.length - 1].c;
+  if (price < STOCK_MIN || price > STOCK_MAX_WHEEL) return null;
+
+  const closes = bars.map(b => b.c);
+  const rsi = calcRSI(closes, 14);
+  const chg5  = closes.length >= 6  ? ((price - closes[closes.length - 6])  / closes[closes.length - 6])  * 100 : 0;
+  const chg20 = closes.length >= 21 ? ((price - closes[closes.length - 21]) / closes[closes.length - 21]) * 100 : 0;
+
+  const support20 = Math.min(...bars.slice(-20).map(b => b.l));
+  const nearSupport = price <= support20 * 1.10;
+
+  if (chg5 < -15) return null;                 // knife
+  if (rsi != null && rsi < 20) return null;    // bleeding
+
+  // realized vol -> IV proxy
+  const rets = [];
+  for (let i = 1; i < closes.length; i++) rets.push((closes[i] - closes[i-1]) / closes[i-1]);
+  if (rets.length < 20) return null;
+  const last20 = rets.slice(-20);
+  const mean = last20.reduce((a,b)=>a+b, 0) / 20;
+  const variance = last20.reduce((a,b)=>a + (b-mean)*(b-mean), 0) / 20;
+  const dailyVol = Math.sqrt(variance);
+  const annualVol = dailyVol * Math.sqrt(252);
+
+  // Target strike: ~7% OTM below
+  const step = price < 10 ? 0.50 : 1.00;
+  let strike = Math.floor((price * 0.93) / step) * step;
+  strike = Math.round(strike * 100) / 100;
+  if (strike < STOCK_MIN) return null;
+
+  const otmPct = (price - strike) / price;
+  const days = 30;
+  const t = days / 365;
+  let premPct = annualVol * Math.sqrt(t) * Math.exp(-otmPct * 5) * 0.4;
+  premPct = Math.max(0.005, Math.min(0.10, premPct));
+  const premShare = Math.round(strike * premPct * 100) / 100;
+  const premContract = Math.round(premShare * 100);
+  const collateral = Math.round(strike * 100);
+  const annYield = (premShare / strike) * (365 / days);
+
+  if (annYield < MIN_ANNUAL_YIELD) return null;
+
+  let score = 30;
+  if (nearSupport) score += 20;
+  if (rsi != null && rsi < 40) score += 15;
+  else if (rsi != null && rsi < 50) score += 8;
+  if (chg5 < -5) score += 10;
+  if (chg20 > -10) score += 5;
+  if (annYield > 0.30) score += 15;
+  else if (annYield > 0.20) score += 8;
+  if (annualVol > 0.40) score += 8;
+  score = Math.min(95, Math.max(5, score));
+  const tier = score >= 65 ? 'STRONG' : score >= 50 ? 'MODERATE' : 'WEAK';
+
+  return {
+    ticker, price, chg5: Math.round(chg5*10)/10, chg20: Math.round(chg20*10)/10,
+    rsi, support20: Math.round(support20*100)/100, nearSupport,
+    strike, premShare, premContract, collateral,
+    annYieldPct: Math.round(annYield * 100),
+    annualVolPct: Math.round(annualVol * 100),
+    days, score, tier
+  };
+}
+
+// ── Rendering ──────────────────────────────────────────────────────────────
+let lastResults = { options: [], wheel: [] };
+
+function passesFilterOptions(s, f) {
+  if (s.score < f.min) return false;
+  if (f.side && s.trend !== f.side) return false;
+  if (f.maxPrice != null && s.price > f.maxPrice) return false;
+  return true;
+}
+function passesFilterWheel(s, f) {
+  if (s.score < f.min) return false;
+  if (f.maxCollateral != null && s.collateral > f.maxCollateral) return false;
+  return true;
+}
+
+function renderResults(sigs) {
+  const filter = currentFilters().find(f => f.id === currentActive());
+  const passes = activeTab === 'options' ? passesFilterOptions : passesFilterWheel;
+  const shown = sigs.filter(s => passes(s, filter)).sort((a,b) => b.score - a.score);
+
+  const res = $('results');
+  if (shown.length === 0) {
+    res.innerHTML = `
+      <div class="empty">
+        <div style="font-size: 42px;">🔍</div>
+        <h2>No setups match filter</h2>
+        <p>${sigs.length} raw signal(s) found, none pass "${filter.label}".</p>
+        <p>Try a looser filter chip above.</p>
+      </div>`;
+    return;
+  }
+
+  if (activeTab === 'options') {
+    res.innerHTML = shown.map(renderOptionCard).join('');
+  } else {
+    res.innerHTML = renderWheelHeader() + shown.map(renderWheelCard).join('');
+  }
+}
+
+function renderOptionCard(s) {
+  const chgCls  = s.changePct > 0 ? 'change-up' : 'change-dn';
+  const chgSign = s.changePct > 0 ? '+' : '';
+  const bullSide = s.trend === 'BULLISH';
+  const cardCls = 'signal ' + (s.score >= 65 ? (bullSide ? 'strong' : 'bearish') : '');
+  const badgeCls = bullSide ? 'call' : 'put';
+  const estContract = Math.round(s.estCost * 100);
+  const dayPosPct = Math.round(s.dayPos * 100);
+  const guidance = bullSide
+    ? `Look for a bounce off $${s.dayLow.toFixed(2)}. Buy CALL strike $${s.strike.toFixed(2)} (3-5 OTM).`
+    : `Look for rejection at $${s.dayHigh.toFixed(2)}. Buy PUT strike $${s.strike.toFixed(2)} (3-5 OTM).`;
+  return `
+    <div class="${cardCls}">
+      <div class="signal-head">
+        <div class="ticker-block">
+          <div class="ticker">${s.ticker}</div>
+          <div class="price">$${s.price.toFixed(2)} <span class="${chgCls}">${chgSign}${s.changePct.toFixed(2)}%</span></div>
+        </div>
+        <span class="badge ${badgeCls}">${s.contractType} · ${s.tier} ${s.score}%</span>
+      </div>
+
+      <div class="score-row">
+        <div class="metric"><div class="lbl">RSI 5m</div><div class="val">${s.rsi ?? '—'}</div></div>
+        <div class="metric"><div class="lbl">Day Pos</div><div class="val">${dayPosPct}%</div></div>
+        <div class="metric"><div class="lbl">Vol 1hr</div><div class="val">${s.relVol}×</div></div>
+        <div class="metric"><div class="lbl">ATR</div><div class="val">${s.atrPct}%</div></div>
+      </div>
+
+      <div class="action">
+        <div class="label">In broker</div>
+        <div>${s.contractType} strike <strong>$${s.strike.toFixed(2)}</strong> · <strong>30–45 day expiry</strong></div>
+        <div>Est: <span class="est">~$${estContract}/contract</span> · OI &gt; 50</div>
+        <div style="margin-top:6px; color:#7d8ba0; font-size:11.5px;">${guidance}</div>
+        <div style="margin-top:6px; color:#e8ecf3; font-size:12px;">
+          <strong>SELL when stock hits ~$${s.sellZone.toFixed(2)}</strong> (typically +80–200% gain)
+        </div>
+        <div style="margin-top:4px; color:#7d8ba0; font-size:11.5px;">
+          💡 Take HALF off at +50% · <span class="warn">Stop: −60%</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderWheelHeader() {
+  return `<div class="info-box">
+    <div class="head">💰 Cash-Secured Put (CSP) Strategy</div>
+    Sell a PUT on a stock you'd be HAPPY to own at a lower price. You collect premium up front. If the stock stays above your strike, you keep the money. If it drops below, you buy 100 shares at that strike (which was already below today's price).
+    <br><br>
+    <strong>You need cash equal to strike × 100</strong> locked as collateral (shown as "Collat" below).
+  </div>`;
+}
+
+function renderWheelCard(s) {
+  const cardCls = 'signal wheel' + (s.score >= 65 ? ' strong' : '');
+  const supportTag = s.nearSupport ? ' ⚡near 20d support' : '';
+  return `
+    <div class="${cardCls}">
+      <div class="signal-head">
+        <div class="ticker-block">
+          <div class="ticker">${s.ticker}</div>
+          <div class="price">$${s.price.toFixed(2)}
+            <span class="${s.chg5 < 0 ? 'change-dn' : 'change-up'}">${s.chg5 > 0 ? '+' : ''}${s.chg5}% 5d</span>${supportTag}
+          </div>
+        </div>
+        <span class="badge wheel">CSP · ${s.tier} ${s.score}%</span>
+      </div>
+
+      <div class="score-row">
+        <div class="metric"><div class="lbl">Yield</div><div class="val">${s.annYieldPct}%</div></div>
+        <div class="metric"><div class="lbl">RSI</div><div class="val">${s.rsi ?? '—'}</div></div>
+        <div class="metric"><div class="lbl">IV Prox</div><div class="val">${s.annualVolPct}%</div></div>
+        <div class="metric"><div class="lbl">20d Low</div><div class="val">$${s.support20}</div></div>
+      </div>
+
+      <div class="action">
+        <div class="label">In Robinhood</div>
+        <div><strong>Sell to Open</strong> 1 PUT contract, strike <strong>$${s.strike.toFixed(2)}</strong>, ~${s.days} days out</div>
+        <div>Collect <span class="est">~$${s.premContract}</span> premium · Locks <strong>$${s.collateral}</strong> collateral</div>
+        <div style="margin-top:6px; color:#7d8ba0; font-size:11.5px;">
+          ${s.annYieldPct}% annualized on collateral if stock stays above $${s.strike.toFixed(2)}.
+        </div>
+        <div style="margin-top:6px; color:#e8ecf3; font-size:12px;">
+          If stock drops below $${s.strike.toFixed(2)}: you buy 100 shares at that price (net cost ≈ $${(s.strike - s.premShare).toFixed(2)} after premium).
+        </div>
+        <div style="margin-top:4px; color:#7d8ba0; font-size:11.5px;">
+          Only sell if you'd genuinely be OK owning 100 shares of ${s.ticker}.
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Main scan loop ─────────────────────────────────────────────────────────
+async function runScan() {
+  const btn = $('scanBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Scanning';
+  setStatus('<span class="spinner"></span>Fetching data…');
+  setProgress(0);
+
+  const isWheel = activeTab === 'wheel';
+  const list = currentWatchlist();
+  const opts = isWheel
+    ? { interval: '1d',  range: '3mo' }
+    : { interval: '5m',  range: '2d'  };
+
+  const results = [];
+  let failed = 0;
+  const total = list.length;
+
+  const BATCH = 4;
+  for (let i = 0; i < total; i += BATCH) {
+    const batch = list.slice(i, i + BATCH);
+    await Promise.all(batch.map(async (t) => {
+      try {
+        const data = await fetchYahoo(t, opts);
+        const { bars, prevClose } = parseBars(data);
+        const sig = isWheel ? analyzeWheel(t, bars) : analyzeOptions(t, bars, prevClose);
+        if (sig) results.push(sig);
+      } catch (e) {
+        failed++;
+      }
+    }));
+    const done = Math.min(i + BATCH, total);
+    setProgress((done / total) * 100);
+    setStatus(`<span class="spinner"></span>Scanned ${done}/${total} · ${results.length} ideas so far${failed ? ` · ${failed} skipped` : ''}`);
+  }
+
+  lastResults[activeTab] = results;
+  setProgress(100);
+  const stamp = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  $('lastRun').textContent = `Last scan: ${stamp} · ${results.length} ideas`;
+
+  if (failed >= total * 0.5) {
+    setStatus(`⚠ ${failed}/${total} fetches failed. Proxies may be rate-limiting. Try again in a minute.`, 'warn');
+  } else if (results.length === 0) {
+    setStatus(`No qualifying ideas right now. Try again later.`, 'warn');
+  } else {
+    const strong = results.filter(r => r.score >= 65).length;
+    setStatus(`✓ ${results.length} ideas (${strong} strong)${failed ? ` · ${failed} skipped` : ''}`, 'ok');
+  }
+
+  renderResults(results);
+  btn.disabled = false;
+  btn.textContent = 'Rescan';
+  setTimeout(() => setProgress(0), 1500);
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    activeTab = el.dataset.tab;
+    $('pageTitle').textContent = activeTab === 'options' ? 'Options Scanner' : 'Wheel / CSP Scanner';
+    $('tickerCount').textContent = currentWatchlist().length;
+    renderChips();
+    if (lastResults[activeTab].length) {
+      renderResults(lastResults[activeTab]);
+    } else {
+      const res = $('results');
+      if (activeTab === 'wheel') {
+        res.innerHTML = renderWheelHeader() + `
+          <div class="empty">
+            <div style="font-size: 42px;">💰</div>
+            <h2>Wheel scanner ready</h2>
+            <p>Tap "Scan" to find CSP ideas.</p>
+            <div class="hint">Looks at stocks under $10 near recent support where selling a 30-day put pays &gt;15% annualized on locked collateral.</div>
+          </div>`;
+      } else {
+        res.innerHTML = `
+          <div class="info-box">
+            <div class="head">📖 Runway Options Strategy</div>
+            Buy CALLs/PUTs <strong>30–45 days out</strong>, <strong>3–5 strikes OTM</strong>. Less theta bleed, better win-rate math.
+            <br><br>
+            <strong>Exit rule:</strong> Sell when stock is ~65% of the way to your strike (usually +80–200% gain).
+            <br>
+            <strong>Take HALF off at +50%</strong> — lock the win, let the rest ride free.
+            <br><br>
+            <strong>Stop:</strong> −60% on the contract, no exceptions.
+          </div>
+          <div class="empty">
+            <div style="font-size: 42px;">📱</div>
+            <h2>Ready to scan</h2>
+            <p>Tap "Scan" for live setups.</p>
+          </div>`;
+      }
+    }
+  });
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+$('tickerCount').textContent = currentWatchlist().length;
+renderChips();
+$('scanBtn').addEventListener('click', runScan);
+
+// Auto-scan if opened during market hours (options tab only)
+(function maybeAutoScan() {
+  const now = new Date();
+  const day = now.getUTCDay();
+  if (day === 0 || day === 6) return;
+  try {
+    const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const mins = et.getHours() * 60 + et.getMinutes();
+    if (mins >= 9*60 + 30 && mins < 16*60) {
+      setTimeout(runScan, 400);
+    }
+  } catch (e) {}
+})();
+</script>
+
+</body>
+</html>

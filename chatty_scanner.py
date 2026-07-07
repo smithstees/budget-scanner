@@ -4,11 +4,15 @@ Runs at 10:30 AM ET via GitHub Actions
 Checks SNAP, F, JBLU (+ IWM optional) for options setups
 Sends notifications to ntfy.sh topic: ragebudgetopt
 
-v3 CHANGES (2026-07-06):
+v4 CHANGES (2026-07-06):
+- Strategy shift to "runway options": 30-45 day expiries, 3-5 strikes OTM
+- Delta-exit guidance: sell when stock is ~65% of way to strike
+- Stop widened to -60% (longer expiry = more forgiving)
+
+v3 CHANGES:
 - Loosened dip filter from -1%/-3% (rarely hit) to -0.3%/-4% (realistic)
 - Added "flat/red" fallback: also accepts stocks flat-to-slightly-red near support
 - Fixed DST bug: is_market_hours() now uses zoneinfo instead of hardcoded UTC-4
-- Contract price target lowered to $0.02-$0.20/share to match user budget ($20 cap)
 - Consistent scoring: only pushes when probability >= 55
 """
 
@@ -36,18 +40,17 @@ TICKERS = {
     "IWM":  {"type": "ETF optional", "required": False},
 }
 
-# Contract criteria — synced with nightly scanner to match $20 budget cap.
-# $0.02-$0.20/share = $2-$20/contract at 100-share multiplier.
-CONTRACT_MIN    = 0.02
-CONTRACT_MAX    = 0.20
+# Contract criteria — runway options: 30-45 day expiry, 3-5 OTM.
+# Slightly higher premium than 7-14 day ATM but much less theta bleed.
+CONTRACT_MIN    = 0.10
+CONTRACT_MAX    = 0.30
 # Loosened dip band. Previous -1% to -3% window was so narrow that almost
 # every scan came back empty. This catches flat-to-modestly-red days too.
 DIP_MIN         = -0.04   # up to -4% pullback still qualifies
 DIP_MAX         =  0.003  # allow slightly green (+0.3%) if near support
-PROFIT_TARGET   = 0.40
-STOP_LOSS       = 0.30
-EXPIRY_DAYS_MIN = 7
-EXPIRY_DAYS_MAX = 14
+STOP_LOSS       = 0.60   # loosened: longer expiry gives room
+EXPIRY_DAYS_MIN = 30
+EXPIRY_DAYS_MAX = 45
 NOTIFY_MIN_PROB = 55  # don't spam on weak setups
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -180,8 +183,11 @@ def analyze(ticker, meta):
     if good_vol:    score += 10
     probability = min(95, max(5, score))
 
-    otm_strike = round(price * 1.015, 0)
+    # 3-5 strikes OTM (~4 strikes)
+    step = 0.50 if price < 10 else 1.00
+    otm_strike = round((round(price / step) * step) + 4 * step, 2)
     est_cost   = est_contract_cost(price, atr)
+    sell_zone  = round(price + 0.65 * (otm_strike - price), 2)
 
     return {
         "ticker":      ticker,
@@ -194,6 +200,7 @@ def analyze(ticker, meta):
         "rel_vol":     rel_vol,
         "atr_pct":     atr,
         "otm_strike":  otm_strike,
+        "sell_zone":   sell_zone,
         "probability": probability,
         "strength":    strength,
         "est_cost":    est_cost,
@@ -228,15 +235,15 @@ def format_signal(r):
     sup     = f" ⚡near support ${r['support']}" if r["near_sup"] else ""
     est_ct  = round(r['est_cost'] * 100)
     action  = (
-        f"In broker: CALL near ${r['otm_strike']} strike · "
-        f"7–14 day expiry · target ${CONTRACT_MIN}–${CONTRACT_MAX}/share "
-        f"(~${est_ct}/contract) · OI > 50"
+        f"In broker: CALL strike ${r['otm_strike']} (3-5 OTM) · "
+        f"{EXPIRY_DAYS_MIN}-{EXPIRY_DAYS_MAX} day expiry · "
+        f"~${est_ct}/contract · OI > 50"
     )
     return (
         f"{r['ticker']} ({r['type']})  ${r['price']}  ({chg})  {r['probability']}% prob\n"
         f"  → {stars} · vol:{r['rel_vol']}x · ATR:{r['atr_pct']}%{sup}\n"
         f"  → {action}\n"
-        f"  Buy weakness — dip {chg}, look for bounce to +40%"
+        f"  SELL when stock hits ~${r['sell_zone']} · stop -60% on contract"
     )
 
 
@@ -248,8 +255,8 @@ def main():
     print(f"Chatty Morning Scanner v3")
     print(f"UTC: {now.strftime('%Y-%m-%d %H:%M')} | Market hours: {is_market_hours()}")
     print(f"Tickers: {', '.join(TICKERS.keys())}")
-    print(f"Strategy: Buy dips {DIP_MIN*100:.1f}% to {DIP_MAX*100:.1f}%, near support, CALL 1-2 OTM")
-    print(f"Contract target: ${CONTRACT_MIN}–${CONTRACT_MAX}/share · 7–14 day expiry")
+    print(f"Strategy: Buy dips {DIP_MIN*100:.1f}% to {DIP_MAX*100:.1f}%, near support, CALL 3-5 OTM")
+    print(f"Contract target: ${CONTRACT_MIN}–${CONTRACT_MAX}/share · {EXPIRY_DAYS_MIN}-{EXPIRY_DAYS_MAX} day expiry")
     print(f"{'='*60}\n")
 
     if not MASSIVE_KEY:
@@ -306,14 +313,15 @@ def main():
     )
 
     body = (
-        f"Buy weakness not strength · +40% target · -30% stop\n\n"
+        f"Runway options · sell into strength · -60% stop\n\n"
         f"{lines}\n\n"
-        f"── CHATTY RULES ──\n"
+        f"── RULES ──\n"
         f"✅ Dip in band ({DIP_MIN*100:.1f}% to {DIP_MAX*100:.1f}%) ✓\n"
         f"✅ Near support = better entry\n"
-        f"✅ CALL 1–2 strikes OTM, 7–14 days out\n"
-        f"✅ Contract ${CONTRACT_MIN}–${CONTRACT_MAX}/share (${int(CONTRACT_MIN*100)}–${int(CONTRACT_MAX*100)})\n"
-        f"🚪 Exit: +40% profit OR -30% stop, no exceptions"
+        f"✅ CALL 3–5 strikes OTM, {EXPIRY_DAYS_MIN}–{EXPIRY_DAYS_MAX} days out (30+ = less theta bleed)\n"
+        f"✅ Contract ${CONTRACT_MIN}–${CONTRACT_MAX}/share (~${int(CONTRACT_MIN*100)}–${int(CONTRACT_MAX*100)})\n"
+        f"🚪 Exit: sell as stock approaches strike (65% of the way) OR -60% stop\n"
+        f"💡 Take HALF off at +50% — lock the win"
     )
 
     send_notification(title, body, "high")

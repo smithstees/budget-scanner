@@ -1,0 +1,23 @@
+name: Wheel / CSP Scanner
+
+# On-demand + weekly (Sunday night, so you have ideas Monday morning)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 1 * * 1'  # 1:00 UTC Monday = 9pm ET Sunday
+
+jobs:
+  wheel-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run wheel scanner
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python wheel_scanner.py

@@ -174,16 +174,18 @@ def analyze(ticker, bars, prev_close):
     if greens >= 2 and change_pct < 0:   bull_score += 10  # reversal off dip
     if reds   >= 2 and change_pct > 0:   bear_score += 10  # rejection at top
 
+    # 3-5 strikes OTM (~4 strikes)
+    step = 0.50 if price < 10 else 1.00
     if bull_score > bear_score and bull_score >= 25:
         trend = 'BULLISH'
         score = min(95, max(5, bull_score))
         ctype = 'CALL'
-        strike = round(day_high, 2)
+        strike = round((round(price / step) * step) + 4 * step, 2)
     elif bear_score > bull_score and bear_score >= 25:
         trend = 'BEARISH'
         score = min(95, max(5, bear_score))
         ctype = 'PUT'
-        strike = round(day_low, 2)
+        strike = round((round(price / step) * step) - 4 * step, 2)
     else:
         print(f"  [{ticker}] ${price:.2f} no signal (bull:{bull_score} bear:{bear_score})")
         return None
@@ -218,15 +220,21 @@ def push_signal(sig):
     direction = sig['contract_type']
     title = f"[LIVE {direction}] {sig['ticker']} {sig['tier']} {sig['score']}%"
     est_ct = round(sig['est_cost'] * 100)
+    # Sell zone: 65% of the way from current to strike
+    if sig['trend'] == 'BULLISH':
+        sell_zone = round(sig['price'] + 0.65 * (sig['strike'] - sig['price']), 2)
+    else:
+        sell_zone = round(sig['price'] - 0.65 * (sig['price'] - sig['strike']), 2)
     body = (
         f"${sig['price']:.2f} ({sig['change_pct']:+.2f}% today)\n"
         f"Range: ${sig['day_low']:.2f} — ${sig['day_high']:.2f} "
         f"(at {int(sig['day_pos']*100)}%)\n"
         f"RSI(5m): {sig['rsi']} | vol: {sig['rel_vol']}x last hour\n"
-        f"Buy {direction} near ${sig['strike']:.2f} strike\n"
-        f"Expiry 7-14 days | target $0.02-$0.20/sh (~${est_ct} est) | OI>50\n"
-        f"Exit: +40% profit | -30% stop\n"
-        f"⚠ Live scan — verify contract price in broker before entering."
+        f"Buy {direction} strike ${sig['strike']:.2f} (3-5 OTM)\n"
+        f"Expiry 30-45 days | ~${est_ct}/contract | OI>50\n"
+        f"SELL when stock hits ~${sell_zone:.2f} · stop -60%\n"
+        f"💡 Take HALF off at +50% — lock the win\n"
+        f"⚠ Live scan — verify contract price in broker."
     )
     try:
         data = body.encode('utf-8')

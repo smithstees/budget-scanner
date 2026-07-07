@@ -3,13 +3,21 @@
 Nightly Options Scanner — End of Day
 Uses Massive.com (Polygon) free tier (/v2/aggs only)
 Scoring: RSI + Bollinger Bands + Volume + 3-Candle Confirm
-Target: contracts $0.02-$0.20/share ($2-$20/contract), 2-4 week expiry
+Target: contracts $0.10-$0.30/share ($10-$30/contract), 30-45 day expiry
 Pushes to ntfy.sh topic: ragebudgetopt
 
-REVISIONS (2026-07-06):
-- Watchlist pruned to sub-$15 stocks where ATM options typically fit a $20 budget
+REVISIONS v4 (2026-07-06):
+- Strategy shift: recommend 30-45 day expiries, 3-5 strikes OTM ("runway options")
+  instead of 7-14 day / 1-2 OTM. Longer runway = far less theta bleed, better
+  win-rate math (35-40% wins can still be profitable when winners run 100%+).
+- Exit guidance changed from +40% price target to delta-based: sell when the
+  stock is 60-75% of the way to the strike. Avoids gamma trap at expiration.
+- Stop loosened from -50% to -60% (longer expiry means more time to recover)
+- Est contract cost recalibrated for the further-OTM + longer-dated combo
+
+PRIOR REVISIONS:
+- Watchlist pruned to sub-$15 stocks where ATM options typically fit a $30 budget
 - Notification threshold raised: only STRONG signals (score >= 60) push
-- Contract price target synced to $0.02-$0.20/share across all scripts
 - Delisted/zero-bar tickers (SAVE, GOEV, BITF, PARA) removed
 """
 
@@ -118,16 +126,26 @@ def candle_dir(b):
 
 def est_contract_cost(price, atr_pct):
     """
-    Rough estimate of a 2-4 week near-ATM contract's premium as
-    a fraction of the underlying, based on the stock's ATR%.
-    Cheap stocks with modest ATR give the smallest contracts.
-    Returns estimated $/share (multiply by 100 for $/contract).
+    Rough estimate of a 30-45 day, 3-5 strikes OTM contract premium as $/share.
+    Longer runway costs more than 2-week ATM but decays FAR slower.
+    Multiply result by 100 for $/contract.
     """
-    # Rule of thumb: ATM premium ~ 0.02 * price for 3wk on a low-vol name,
-    # scaling up with realized volatility.
+    # 30-45 day, 3-5 strikes OTM: roughly 1.5-3% of underlying for low-vol names,
+    # scaling with realized volatility.
     base = 0.02 * price
-    vol_boost = (atr_pct / 100) * price * 0.6
+    vol_boost = (atr_pct / 100) * price * 0.8
     return round(base + vol_boost, 2)
+
+def suggest_strike(price, direction):
+    """3-5 strikes OTM. Assumes $0.50 strike increments under $10, $1 above."""
+    step = 0.50 if price < 10 else 1.00
+    otm_strikes = 4  # split-the-middle of 3-5
+    if direction == 'BULLISH':
+        # Round up to next step, then go 4 more steps OTM
+        target = math.ceil(price / step) * step + otm_strikes * step
+    else:
+        target = math.floor(price / step) * step - otm_strikes * step
+    return round(target, 2)
 
 def analyze(ticker):
     bars = fetch_candles(ticker)
@@ -194,12 +212,12 @@ def analyze(ticker):
         trend = 'BULLISH'
         score = min(95, max(5, bull_score))
         contract_type = 'CALL'
-        strike = res
+        strike = suggest_strike(price, 'BULLISH')
     elif bear_score > bull_score and bear_score >= 30:
         trend = 'BEARISH'
         score = min(95, max(5, bear_score))
         contract_type = 'PUT'
-        strike = sup
+        strike = suggest_strike(price, 'BEARISH')
     else:
         print(f"  [{ticker}] no clear signal (bull:{bull_score} bear:{bear_score})")
         return None
@@ -234,13 +252,19 @@ def push_signal(sig):
     title = f"[{direction}] {sig['ticker']} - {sig['tier']} {sig['score']}% {vol_tag}"
 
     est_contract = round(sig['est_cost'] * 100)
+    # Delta-exit target: sell when stock is 65% of the way from current to strike
+    if sig['trend'] == 'BULLISH':
+        sell_zone = round(sig['price'] + 0.65 * (sig['strike'] - sig['price']), 2)
+    else:
+        sell_zone = round(sig['price'] - 0.65 * (sig['price'] - sig['strike']), 2)
     body = (
         f"${sig['price']:.2f} ({'+' if sig['chg']>0 else ''}{sig['chg']:.2f}%)\n"
         f"Signal: {sig['trend']} | RSI: {sig['rsi']} | Vol: {sig['rel_vol']}x\n"
         f"ATR: {sig['atr_pct']}%\n"
-        f"Buy {sig['contract_type']} near ${sig['strike']:.2f} strike\n"
-        f"Expiry 2-4 wks | target $0.02-$0.20/sh (~${est_contract} est) | OI > 50\n"
-        f"Exit: +50% profit | -50% stop"
+        f"Buy {sig['contract_type']} strike ${sig['strike']:.2f} (3-5 OTM)\n"
+        f"Expiry 30-45 days | est ~${est_contract}/contract | OI > 50\n"
+        f"SELL when stock hits ~${sell_zone:.2f} (likely +80-200% gain)\n"
+        f"Stop: -60% on contract"
     )
 
     try:

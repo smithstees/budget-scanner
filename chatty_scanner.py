@@ -4,11 +4,12 @@ Runs at 10:30 AM ET via GitHub Actions
 Checks SNAP, F, JBLU (+ IWM optional) for options setups
 Sends notifications to ntfy.sh topic: ragebudgetopt
 
-v2 CHANGES:
-- Switched to api.massive.com (Polygon.io rebrand)
-- Removed options endpoint (paid tier only)
-- Fixed incomplete candle issue: strips today's open bar before pattern check
-- Contract details now come from broker after signal fires
+v3 CHANGES (2026-07-06):
+- Loosened dip filter from -1%/-3% (rarely hit) to -0.3%/-4% (realistic)
+- Added "flat/red" fallback: also accepts stocks flat-to-slightly-red near support
+- Fixed DST bug: is_market_hours() now uses zoneinfo instead of hardcoded UTC-4
+- Contract price target lowered to $0.02-$0.20/share to match user budget ($20 cap)
+- Consistent scoring: only pushes when probability >= 55
 """
 
 import os
@@ -16,9 +17,15 @@ import time
 import requests
 from datetime import datetime, timedelta
 
+try:
+    from zoneinfo import ZoneInfo
+    ET = ZoneInfo("America/New_York")
+except Exception:
+    ET = None  # fallback below
+
 # ── Config ────────────────────────────────────────────────────────────────────
-MASSIVE_KEY = os.environ.get("POLYGON_KEY", "")   # reuse existing secret
-NTFY_TOPIC  = "ragebudgetopt"
+MASSIVE_KEY = os.environ.get("POLYGON_KEY", "")
+NTFY_TOPIC  = os.environ.get("NTFY_TOPIC", "ragebudgetopt")
 BASE_URL    = "https://api.massive.com"
 
 # Tickers per Chatty parameters
@@ -29,15 +36,19 @@ TICKERS = {
     "IWM":  {"type": "ETF optional", "required": False},
 }
 
-# Contract criteria (to look for in broker after signal)
-CONTRACT_MIN    = 0.20   # $0.20/share = $20/contract
-CONTRACT_MAX    = 0.60   # $0.60/share = $60/contract
-DIP_MIN         = -0.03  # -3% max pullback
-DIP_MAX         = -0.01  # -1% minimum dip to qualify
-PROFIT_TARGET   = 0.40   # 40% profit target
-STOP_LOSS       = 0.30   # 30% stop loss
+# Contract criteria — synced with nightly scanner to match $20 budget cap.
+# $0.02-$0.20/share = $2-$20/contract at 100-share multiplier.
+CONTRACT_MIN    = 0.02
+CONTRACT_MAX    = 0.20
+# Loosened dip band. Previous -1% to -3% window was so narrow that almost
+# every scan came back empty. This catches flat-to-modestly-red days too.
+DIP_MIN         = -0.04   # up to -4% pullback still qualifies
+DIP_MAX         =  0.003  # allow slightly green (+0.3%) if near support
+PROFIT_TARGET   = 0.40
+STOP_LOSS       = 0.30
 EXPIRY_DAYS_MIN = 7
 EXPIRY_DAYS_MAX = 14
+NOTIFY_MIN_PROB = 55  # don't spam on weak setups
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -59,17 +70,17 @@ def get_bars(ticker, days=20):
 
 
 def is_market_hours():
-    """Check if we're currently during market hours (ET)."""
-    now = datetime.utcnow()
-    # EDT = UTC-4, EST = UTC-5. 10:30 AM ET runs during EDT so use -4
-    et_hour = (now.hour - 4) % 24
-    et_min  = now.minute
-    weekday = now.weekday()  # 0=Mon, 4=Fri
-    if weekday > 4:
+    """Check if we're currently during regular market hours (ET).
+    Handles DST correctly via zoneinfo."""
+    if ET is not None:
+        now = datetime.now(ET)
+    else:
+        # Fallback assumes EDT (UTC-4). Off by an hour Nov-Mar.
+        now = datetime.utcnow() - timedelta(hours=4)
+    if now.weekday() > 4:
         return False
-    market_open  = (et_hour > 9) or (et_hour == 9 and et_min >= 30)
-    market_close = (et_hour >= 16)
-    return market_open and not market_close
+    minutes = now.hour * 60 + now.minute
+    return 9 * 60 + 30 <= minutes < 16 * 60
 
 
 def candle_dir(b):
@@ -93,6 +104,13 @@ def atr_pct(bars, price):
     return round((avg / price) * 100, 1)
 
 
+def est_contract_cost(price, atr):
+    """Rough $/share estimate for a 7-14 day near-ATM call."""
+    base = 0.015 * price
+    vol_boost = (atr / 100) * price * 0.5
+    return round(base + vol_boost, 2)
+
+
 # ── Core analysis ─────────────────────────────────────────────────────────────
 
 def analyze(ticker, meta):
@@ -101,7 +119,6 @@ def analyze(ticker, meta):
         print(f"    {ticker} — not enough bars ({len(bars)})")
         return None
 
-    # Strip today's incomplete candle during market hours
     in_market = is_market_hours()
     closed_bars = bars[:-1] if in_market else bars
 
@@ -109,57 +126,52 @@ def analyze(ticker, meta):
         print(f"    {ticker} — not enough closed bars")
         return None
 
-    last_closed = closed_bars[-1]
     live_bar    = bars[-1]
-    price       = live_bar["c"]  # current price from live bar
+    price       = live_bar["c"]
 
-    # Change % vs previous close
-    prev_close  = closed_bars[-2]["c"]
+    prev_close  = closed_bars[-2]["c"] if in_market else closed_bars[-1]["c"]
+    if not in_market:
+        # Yesterday vs the day before
+        prev_close = closed_bars[-2]["c"]
     change_pct  = round(((price - prev_close) / prev_close) * 100, 2)
 
-    # ── Chatty dip check: stock must be red/pulling back 1–3% ──────────────
+    # ── Loosened dip check: -4% to +0.3% qualifies ──────────────────────────
     if not (DIP_MIN <= change_pct / 100 <= DIP_MAX):
-        print(f"    {ticker} — not dipping ({change_pct}%) — Chatty wants -1% to -3%")
+        print(f"    {ticker} — outside dip band ({change_pct}%) — want {DIP_MIN*100}% to {DIP_MAX*100}%")
         return None
 
-    # ── 3-candle trend on closed bars ──────────────────────────────────────
+    # ── 3-candle trend on closed bars ───────────────────────────────────────
     dirs = [candle_dir(b) for b in closed_bars[-3:]]
     gc   = dirs.count("green")
     rc   = dirs.count("red")
 
-    # Chatty: buy weakness — want red candles or mixed pulling back
-    # Accept: 3 red (strong bear), or 2 red (pullback), or mixed with dip
-    if gc == 3:
-        print(f"    {ticker} — 3 green candles, not a dip setup")
+    if gc == 3 and change_pct > 0:
+        print(f"    {ticker} — 3 green + rising, not a dip setup")
         return None
 
     trend = "bearish" if rc >= 2 else "neutral_dip"
 
-    # ── Volume ──────────────────────────────────────────────────────────────
     vol_bars = [b["v"] for b in closed_bars[-11:] if "v" in b]
     avg_vol  = sum(vol_bars) / len(vol_bars) if vol_bars else 1
     today_vol = live_bar.get("v", 0)
     rel_vol   = round(today_vol / avg_vol, 1) if avg_vol > 0 else 0
 
-    # ── Support level ───────────────────────────────────────────────────────
     support    = round(min(b["l"] for b in closed_bars[-10:]), 2)
-    near_sup   = price <= support * 1.03  # within 3% of support
+    near_sup   = price <= support * 1.03
 
-    # ── ATR ─────────────────────────────────────────────────────────────────
     atr        = atr_pct(closed_bars, price)
     good_vol   = 2 < atr < 8
 
-    # ── Signal strength ─────────────────────────────────────────────────────
     strength = 1
     if near_sup:           strength += 1
     if rel_vol >= 1.5:     strength += 1
-    if rc == 3:            strength += 1
+    if rc >= 2:            strength += 1
     if good_vol:           strength += 1
     strength = min(5, strength)
 
-    # ── Probability score ───────────────────────────────────────────────────
     score = 20
-    if DIP_MIN <= change_pct / 100 <= DIP_MAX: score += 20  # clean dip
+    if DIP_MIN <= change_pct / 100 <= -0.005:  # actually dipping (>0.5% red)
+        score += 20
     if near_sup:    score += 20
     if rc >= 2:     score += 15
     if rel_vol >= 2.0: score += 15
@@ -168,10 +180,8 @@ def analyze(ticker, meta):
     if good_vol:    score += 10
     probability = min(95, max(5, score))
 
-    # ── Suggested strike ────────────────────────────────────────────────────
-    # Chatty: 1–2 strikes OTM on a call (buy the dip = expect bounce)
-    # Nearest round number 1-2% above current price
-    otm_strike = round(price * 1.015, 0)  # ~1.5% OTM
+    otm_strike = round(price * 1.015, 0)
+    est_cost   = est_contract_cost(price, atr)
 
     return {
         "ticker":      ticker,
@@ -186,6 +196,7 @@ def analyze(ticker, meta):
         "otm_strike":  otm_strike,
         "probability": probability,
         "strength":    strength,
+        "est_cost":    est_cost,
     }
 
 
@@ -215,9 +226,11 @@ def format_signal(r):
     stars   = "★" * r["strength"] + "☆" * (5 - r["strength"])
     chg     = f"{r['change_pct']}%"
     sup     = f" ⚡near support ${r['support']}" if r["near_sup"] else ""
+    est_ct  = round(r['est_cost'] * 100)
     action  = (
         f"In broker: CALL near ${r['otm_strike']} strike · "
-        f"7–14 day expiry · find ${CONTRACT_MIN}–${CONTRACT_MAX}/share · OI > 50"
+        f"7–14 day expiry · target ${CONTRACT_MIN}–${CONTRACT_MAX}/share "
+        f"(~${est_ct}/contract) · OI > 50"
     )
     return (
         f"{r['ticker']} ({r['type']})  ${r['price']}  ({chg})  {r['probability']}% prob\n"
@@ -232,11 +245,11 @@ def format_signal(r):
 def main():
     now = datetime.utcnow()
     print(f"\n{'='*60}")
-    print(f"Chatty Morning Scanner v2")
+    print(f"Chatty Morning Scanner v3")
     print(f"UTC: {now.strftime('%Y-%m-%d %H:%M')} | Market hours: {is_market_hours()}")
     print(f"Tickers: {', '.join(TICKERS.keys())}")
-    print(f"Strategy: Buy dips -1% to -3%, near support, CALL 1-2 OTM")
-    print(f"Contract to find: ${CONTRACT_MIN}–${CONTRACT_MAX}/share · 7–14 day expiry")
+    print(f"Strategy: Buy dips {DIP_MIN*100:.1f}% to {DIP_MAX*100:.1f}%, near support, CALL 1-2 OTM")
+    print(f"Contract target: ${CONTRACT_MIN}–${CONTRACT_MAX}/share · 7–14 day expiry")
     print(f"{'='*60}\n")
 
     if not MASSIVE_KEY:
@@ -256,45 +269,54 @@ def main():
             print(f"${sig['price']} {sig['change_pct']}% — {sig['probability']}% prob ✓")
         else:
             print("no setup")
-        time.sleep(0.5)  # gentle rate limit
+        time.sleep(0.5)
 
     results.sort(key=lambda x: x["probability"], reverse=True)
 
     print(f"\n{'─'*60}")
     print(f"Setups found: {len(results)} / {len(TICKERS)}")
 
+    strong = [r for r in results if r["probability"] >= NOTIFY_MIN_PROB]
+
     if not results:
         send_notification(
-            "Chatty: No dip setups at 10:30 AM",
-            f"Checked SNAP, F, JBLU, IWM.\n"
-            f"None are dipping -1% to -3% right now.\n"
-            f"Check again after 11 AM if market sells off.",
+            "Chatty: no setups at 10:30 AM",
+            f"Checked {', '.join(TICKERS.keys())}.\n"
+            f"None fit the dip/near-support pattern right now.\n"
+            f"Try the live scanner (Actions → Live Scanner → Run) later today.",
             priority="low"
         )
         return
 
-    lines = "\n\n".join(format_signal(r) for r in results)
-    strong = [r for r in results if r["probability"] >= 60]
+    if not strong:
+        # Log-only summary, no phone push for weak setups
+        print(f"Only weak setups (top prob {results[0]['probability']}%). Not notifying.")
+        send_notification(
+            f"Chatty: {len(results)} weak setup(s), no push",
+            f"Nothing scored >= {NOTIFY_MIN_PROB}% today.\n"
+            f"Top: {results[0]['ticker']} @ {results[0]['probability']}% prob.",
+            priority="low"
+        )
+        return
+
+    lines = "\n\n".join(format_signal(r) for r in strong)
 
     title = (
         f"Chatty: {len(strong)} dip setup{'s' if len(strong) != 1 else ''} — buy weakness"
-        if strong else
-        f"Chatty: {len(results)} weak dip — proceed with caution"
     )
 
     body = (
         f"Buy weakness not strength · +40% target · -30% stop\n\n"
         f"{lines}\n\n"
         f"── CHATTY RULES ──\n"
-        f"✅ Stock dipping -1% to -3% ✓\n"
+        f"✅ Dip in band ({DIP_MIN*100:.1f}% to {DIP_MAX*100:.1f}%) ✓\n"
         f"✅ Near support = better entry\n"
         f"✅ CALL 1–2 strikes OTM, 7–14 days out\n"
-        f"✅ Contract $0.20–$0.60/share ($20–$60)\n"
+        f"✅ Contract ${CONTRACT_MIN}–${CONTRACT_MAX}/share (${int(CONTRACT_MIN*100)}–${int(CONTRACT_MAX*100)})\n"
         f"🚪 Exit: +40% profit OR -30% stop, no exceptions"
     )
 
-    priority = "high" if strong else "default"
-    send_notification(title, body, priority)
+    send_notification(title, body, "high")
     print("\nDone.")
 
 

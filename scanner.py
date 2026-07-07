@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """
 Nightly Options Scanner — End of Day
-Uses Massive.com free tier (/v2/aggs only)
+Uses Massive.com (Polygon) free tier (/v2/aggs only)
 Scoring: RSI + Bollinger Bands + Volume + 3-Candle Confirm
-Target: contracts $0.02-$0.25/share, 2-4 week expiry
+Target: contracts $0.02-$0.20/share ($2-$20/contract), 2-4 week expiry
 Pushes to ntfy.sh topic: ragebudgetopt
+
+REVISIONS (2026-07-06):
+- Watchlist pruned to sub-$15 stocks where ATM options typically fit a $20 budget
+- Notification threshold raised: only STRONG signals (score >= 60) push
+- Contract price target synced to $0.02-$0.20/share across all scripts
+- Delisted/zero-bar tickers (SAVE, GOEV, BITF, PARA) removed
 """
 
 import os, time, math, json, urllib.request, urllib.parse
@@ -12,28 +18,42 @@ from datetime import datetime, timedelta
 
 # CONFIG
 API_KEY   = os.environ.get('POLYGON_KEY', '')
-NTFY_TOPIC = 'ragebudgetopt'
+NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
 BASE_URL  = 'https://api.massive.com'
 
+# Only stocks whose ATM/near-money 2-4 week options typically trade under
+# $0.20/share ($20/contract). Anything priced >$15 rarely fits that budget.
 WATCHLIST = [
-  'SOFI','HOOD','AFRM','UPST','OPEN',
-  'JBLU','AAL','SAVE','CCL','NCLH',
-  'RIVN','LCID','JOBY','ACHR','GOEV','WKHS',
-  'MARA','RIOT','CLSK','CIFR','WULF','BITF','COIN',
-  'NIO','XPEV','LI',
-  'SNAP','PINS','RBLX','U','PLTR',
-  'DKNG','PENN',
-  'PLUG','SPWR','ENVX',
-  'SIRI','NOK','T','PARA','CMCSA',
-  'HIMS','SENS',
-  'BAC','F',
-  'GRAB','VALE','ITUB','BBD','ZIM',
-  'TLRY','SNDL',
-  'CLOV','EXPR','ATER','IDEX','MVIS','GNUS',
-  'KVUE','LYFT','UBER'
+  # Fintech / lending (cheap end)
+  'SOFI','OPEN',
+  # Airlines / cruise (low-priced volatile names)
+  'JBLU','AAL','CCL','NCLH',
+  # EVs / mobility
+  'RIVN','LCID','JOBY','ACHR','WKHS','NIO','XPEV','LI',
+  # Crypto miners (small-caps only)
+  'MARA','RIOT','CLSK','CIFR','WULF',
+  # Social / consumer
+  'SNAP','PINS',
+  # Cannabis / small-cap speculative
+  'TLRY','SNDL','CLOV','ATER','IDEX','MVIS',
+  # Telecom / media low-priced
+  'NOK','SIRI','T',
+  # Health / other budget names
+  'SENS','GRAB','F','LYFT','PLUG','SPWR','ENVX',
+  # Brazilian ADRs / shipping (typically cheap)
+  'VALE','ITUB','BBD','ZIM',
 ]
 
-DELAY = 13
+DELAY = 13  # free tier: 5 calls/min
+
+# Price band for the underlying stock. Below $2 = often delisted/illiquid.
+# Above $15 = options usually cost > $20/contract at reasonable strikes.
+STOCK_PRICE_MIN = 2.0
+STOCK_PRICE_MAX = 15.0
+
+# Only push notifications for signals scoring at least this high.
+# Weak/moderate setups are logged but not pinged, so the phone doesn't spam.
+NOTIFY_MIN_SCORE = 60
 
 def fetch_candles(ticker):
     end = datetime.now()
@@ -96,6 +116,19 @@ def candle_dir(b):
     if body < rng * 0.05: return 'd'
     return 'g' if b['c'] > b['o'] else 'r'
 
+def est_contract_cost(price, atr_pct):
+    """
+    Rough estimate of a 2-4 week near-ATM contract's premium as
+    a fraction of the underlying, based on the stock's ATR%.
+    Cheap stocks with modest ATR give the smallest contracts.
+    Returns estimated $/share (multiply by 100 for $/contract).
+    """
+    # Rule of thumb: ATM premium ~ 0.02 * price for 3wk on a low-vol name,
+    # scaling up with realized volatility.
+    base = 0.02 * price
+    vol_boost = (atr_pct / 100) * price * 0.6
+    return round(base + vol_boost, 2)
+
 def analyze(ticker):
     bars = fetch_candles(ticker)
     if len(bars) < 22:
@@ -106,8 +139,8 @@ def analyze(ticker):
     prev = bars[-2]
     price = last['c']
 
-    if price < 2 or price > 60:
-        print(f"  [{ticker}] price ${price:.2f} out of range")
+    if price < STOCK_PRICE_MIN or price > STOCK_PRICE_MAX:
+        print(f"  [{ticker}] price ${price:.2f} out of ${STOCK_PRICE_MIN}-${STOCK_PRICE_MAX} budget range")
         return None
 
     chg = round(((price - prev['c']) / prev['c']) * 10000) / 100
@@ -172,8 +205,10 @@ def analyze(ticker):
         return None
 
     tier = 'STRONG' if score >= 65 else 'MODERATE' if score >= 45 else 'WEAK'
+    est_cost = est_contract_cost(price, atr_pct)
 
-    print(f"  [{ticker}] ${price:.2f} {trend} score:{score} RSI:{rsi} vol:{rel_vol}x BB:{round(bb['pct']*100) if bb else 'n/a'}%")
+    print(f"  [{ticker}] ${price:.2f} {trend} score:{score} RSI:{rsi} vol:{rel_vol}x "
+          f"BB:{round(bb['pct']*100) if bb else 'n/a'}% est_prem:${est_cost}")
 
     return {
         'ticker': ticker,
@@ -190,6 +225,7 @@ def analyze(ticker):
         'strike': strike,
         'res': res,
         'sup': sup,
+        'est_cost': est_cost,
     }
 
 def push_signal(sig):
@@ -197,12 +233,13 @@ def push_signal(sig):
     vol_tag = 'HIGH VOL' if sig['rel_vol'] >= 2.0 else 'vol+' if sig['rel_vol'] >= 1.5 else ''
     title = f"[{direction}] {sig['ticker']} - {sig['tier']} {sig['score']}% {vol_tag}"
 
+    est_contract = round(sig['est_cost'] * 100)
     body = (
         f"${sig['price']:.2f} ({'+' if sig['chg']>0 else ''}{sig['chg']:.2f}%)\n"
         f"Signal: {sig['trend']} | RSI: {sig['rsi']} | Vol: {sig['rel_vol']}x\n"
         f"ATR: {sig['atr_pct']}%\n"
         f"Buy {sig['contract_type']} near ${sig['strike']:.2f} strike\n"
-        f"Expiry 2-4 wks | price $0.02-$0.25/sh | OI > 50\n"
+        f"Expiry 2-4 wks | target $0.02-$0.20/sh (~${est_contract} est) | OI > 50\n"
         f"Exit: +50% profit | -50% stop"
     )
 
@@ -225,7 +262,7 @@ def push_signal(sig):
     except Exception as e:
         print(f"  Push error: {e}")
 
-def push_summary(signals):
+def push_summary(signals, pushed_count):
     if not signals:
         try:
             data = "No setups met scoring threshold tonight. Try again tomorrow.".encode('utf-8')
@@ -242,18 +279,19 @@ def push_summary(signals):
         except: pass
         return
 
-    strong = [s for s in signals if s['score'] >= 65]
+    strong = [s for s in signals if s['score'] >= NOTIFY_MIN_SCORE]
+    top_names = ', '.join([s['ticker'] for s in signals[:5]]) or 'none'
     summary = (
         f"Scanned {len(WATCHLIST)} tickers\n"
-        f"Signals found: {len(signals)} ({len(strong)} strong)\n"
-        f"Best: {', '.join([s['ticker'] for s in signals[:3]])}"
+        f"Total setups: {len(signals)} | Pushed (score>={NOTIFY_MIN_SCORE}): {pushed_count}\n"
+        f"Top 5 by score: {top_names}"
     )
     try:
         req = urllib.request.Request(
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=summary.encode('utf-8'),
             headers={
-                'Title': f"Nightly Scan Complete - {len(signals)} signals".encode('utf-8'),
+                'Title': f"Nightly Scan Complete - {pushed_count} pushed".encode('utf-8'),
                 'Priority': 'default',
                 'Content-Type': 'text/plain; charset=utf-8',
             },
@@ -266,6 +304,7 @@ def main():
     print(f"\n{'='*50}")
     print(f"Nightly Scanner -- {datetime.now().strftime('%Y-%m-%d %H:%M ET')}")
     print(f"Tickers: {len(WATCHLIST)} | Delay: {DELAY}s | Free tier")
+    print(f"Stock band: ${STOCK_PRICE_MIN}-${STOCK_PRICE_MAX} | Push threshold: score>={NOTIFY_MIN_SCORE}")
     print(f"{'='*50}\n")
 
     if not API_KEY:
@@ -273,25 +312,30 @@ def main():
         return
 
     signals = []
+    pushed = 0
 
     for i, ticker in enumerate(WATCHLIST):
         print(f"[{i+1}/{len(WATCHLIST)}] {ticker}")
         sig = analyze(ticker)
         if sig:
             signals.append(sig)
-            push_signal(sig)
-            time.sleep(2)
+            if sig['score'] >= NOTIFY_MIN_SCORE:
+                push_signal(sig)
+                pushed += 1
+                time.sleep(2)
         time.sleep(DELAY)
 
     signals.sort(key=lambda s: s['score'], reverse=True)
-    push_summary(signals)
+    push_summary(signals, pushed)
 
     print(f"\n{'='*50}")
-    print(f"Done. {len(signals)} signals found.")
+    print(f"Done. {len(signals)} setups found, {pushed} pushed to phone.")
     if signals:
-        print("\nTop signals:")
-        for s in signals[:5]:
-            print(f"  {s['ticker']:6} {s['trend']:8} score:{s['score']} {s['contract_type']} near ${s['strike']:.2f}")
+        print("\nTop signals (by score):")
+        for s in signals[:8]:
+            marker = "PUSH" if s['score'] >= NOTIFY_MIN_SCORE else "----"
+            print(f"  {marker} {s['ticker']:6} {s['trend']:8} score:{s['score']} "
+                  f"{s['contract_type']} near ${s['strike']:.2f} est ${round(s['est_cost']*100)}")
     print(f"{'='*50}\n")
 
 if __name__ == '__main__':

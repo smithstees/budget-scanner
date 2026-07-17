@@ -181,6 +181,91 @@
     vertical-align: middle; margin-right: 4px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Trade Logger ─────────────────────────────────────────────────── */
+  .tl-hero { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .tl-btn {
+    padding:14px; border-radius:12px; border:none; cursor:pointer;
+    font-family:inherit; font-size:14px; font-weight:700; letter-spacing:0.3px;
+    touch-action:manipulation; transition:transform 0.1s;
+  }
+  .tl-btn:active { transform:scale(0.97); }
+  .tl-buy  { background:linear-gradient(135deg,#34d399,#10b981); color:#06251a; box-shadow:0 2px 10px rgba(52,211,153,0.25); }
+  .tl-sell { background:linear-gradient(135deg,#f87171,#dc2626); color:#2e0510; box-shadow:0 2px 10px rgba(248,113,113,0.25); }
+  .tl-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:12px; }
+  .tl-sum { background:#0f1420; border:1px solid #1f2a3d; border-radius:10px; padding:10px 6px; text-align:center; }
+  .tl-sum-val { font-size:16px; font-weight:800; color:#e8ecf3; }
+  .tl-sum-val.g { color:#34d399; } .tl-sum-val.r { color:#f87171; } .tl-sum-val.a { color:#fbbf24; }
+  .tl-sum-lbl { font-size:9px; color:#7d8ba0; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+  .tl-row {
+    background:#131a26; border:1px solid #1f2a3d; border-radius:12px;
+    padding:12px 14px; margin-bottom:8px;
+  }
+  .tl-row.open { border-color:#4a3f1f; background:linear-gradient(180deg,#131a26,#1f1a0f); }
+  .tl-row-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .tl-row-ticker { font-size:17px; font-weight:800; letter-spacing:-0.3px; }
+  .tl-row-date { font-size:11px; color:#7d8ba0; }
+  .tl-row-tag {
+    font-size:10px; padding:3px 8px; border-radius:6px; font-weight:700; letter-spacing:0.3px;
+  }
+  .tl-tag-open { background:#2a2e05; color:#eab308; border:1px solid #4a3f1f; }
+  .tl-tag-win  { background:#052e22; color:#34d399; border:1px solid #1f4a3e; }
+  .tl-tag-loss { background:#2e0510; color:#f87171; border:1px solid #4a1f2a; }
+  .tl-row-body { font-size:12px; color:#cbd5e1; line-height:1.6; }
+  .tl-row-body .ev { color:#e8ecf3; font-weight:700; }
+  .tl-row-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; }
+  .tl-pnl { font-size:14px; font-weight:800; }
+  .tl-pnl.win  { color:#34d399; }
+  .tl-pnl.loss { color:#f87171; }
+  .tl-pnl.open { color:#eab308; font-size:11px; letter-spacing:0.3px; }
+  .tl-close-btn {
+    padding:8px 14px; background:#dc2626; color:#fff; border:none; border-radius:8px;
+    font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; touch-action:manipulation;
+  }
+  .tl-close-btn:active { transform:scale(0.97); }
+  .tl-delete-btn { background:transparent; color:#4b5563; border:none; font-size:11px; cursor:pointer; padding:4px 6px; }
+  .tl-delete-btn:hover { color:#f87171; }
+
+  /* Modal for buy/sell price prompt */
+  .tl-modal { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; }
+  .tl-modal.show { display:flex; }
+  .tl-modal-inner { background:#131a26; border:1px solid #2e3440; border-radius:14px; padding:20px; width:100%; max-width:380px; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
+  .tl-modal-title { font-size:14px; font-weight:700; color:#e8ecf3; margin-bottom:6px; }
+  .tl-modal-sub { font-size:12px; color:#7d8ba0; margin-bottom:14px; line-height:1.5; }
+  .tl-modal-sub .hl { color:#34d399; font-weight:700; }
+  .tl-input {
+    width:100%; background:#0f1420; border:1px solid #2e3440; border-radius:10px;
+    color:#e8ecf3; font-family:inherit; font-size:20px; font-weight:700;
+    padding:14px; outline:none; text-align:center; margin-bottom:10px;
+    -webkit-appearance:none;
+  }
+  .tl-input:focus { border-color:#34d399; }
+  .tl-input.ticker { text-transform:uppercase; }
+  .tl-modal-actions { display:grid; grid-template-columns:1fr 2fr; gap:8px; }
+  .tl-cancel-btn { padding:14px; background:#1c2331; color:#cbd5e1; border:none; border-radius:10px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .tl-confirm-btn { padding:14px; background:linear-gradient(135deg,#34d399,#10b981); color:#06251a; border:none; border-radius:10px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+
+  /* Toast */
+  .tl-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1a1f2e; color:#e8ecf3; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 4px 20px rgba(0,0,0,0.4); z-index:200; opacity:0; transition:all 0.25s; pointer-events:none; }
+  .tl-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .tl-toast.err  { background:#4a1f2a; color:#fecaca; }
+
+  /* Settings */
+  .tl-set-section { background:#0f1420; border:1px solid #1f2a3d; border-radius:12px; padding:14px; margin-bottom:12px; }
+  .tl-set-title { font-size:12px; color:#34d399; font-weight:700; letter-spacing:0.4px; text-transform:uppercase; margin-bottom:10px; }
+  .tl-set-label { font-size:11px; color:#7d8ba0; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; display:block; }
+  .tl-set-input { width:100%; background:#0b0f17; border:1px solid #2e3440; border-radius:8px; color:#e8ecf3; font-family:'Courier New',monospace; font-size:11px; padding:11px; outline:none; margin-bottom:10px; -webkit-appearance:none; }
+  .tl-set-input:focus { border-color:#34d399; }
+  .tl-set-btn { width:100%; padding:12px; background:#1a1f2e; border:1px solid #2e3440; border-radius:8px; color:#e8ecf3; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; touch-action:manipulation; }
+  .tl-set-hint { font-size:11px; color:#7d8ba0; line-height:1.7; margin-top:10px; }
+  .tl-set-hint a { color:#34d399; }
+  .tl-set-ok { font-size:11px; color:#34d399; font-weight:700; margin-top:8px; display:none; }
+  .tl-set-ok.show { display:block; }
+  .tl-code {
+    background:#0b0f17; border:1px solid #1f2a3d; border-radius:8px; padding:10px;
+    font-family:'Courier New',monospace; font-size:10px; color:#cbd5e1;
+    white-space:pre-wrap; overflow-x:auto; line-height:1.6;
+  }
 </style>
 </head>
 <body>
@@ -196,6 +281,8 @@
 <div class="tabs">
   <div class="tab active" data-tab="options">Options</div>
   <div class="tab" data-tab="wheel">Wheel / CSP</div>
+  <div class="tab" data-tab="trades">Trades <span id="tradesTabBadge" style="display:none;background:#182f28;color:#34d399;border:1px solid #1f4a3e;border-radius:999px;font-size:9px;padding:1px 6px;margin-left:4px;"></span></div>
+  <div class="tab" data-tab="settings">⚙︎</div>
 </div>
 
 <div class="config-bar" id="chips"></div>
@@ -204,6 +291,60 @@
 <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
 <main>
+  <!-- Trades tab content -->
+  <div id="tradesView" style="display:none;">
+    <div class="tl-hero">
+      <button class="tl-btn tl-buy" onclick="TL_openBuy()">↑ I BOUGHT IT</button>
+      <button class="tl-btn tl-sell" onclick="TL_openSell()">↓ I SOLD IT</button>
+    </div>
+    <div id="tlSummary" class="tl-summary" style="display:none;"></div>
+    <div id="tlRows"></div>
+    <div class="disclaim" style="padding:16px 0;">Trades auto-log to Google Sheets if you've set your Web App URL in Settings.</div>
+  </div>
+
+  <!-- Settings tab content -->
+  <div id="settingsView" style="display:none;">
+    <div class="tl-set-section">
+      <div class="tl-set-title">Google Sheets — Trade Log</div>
+      <label class="tl-set-label">Apps Script Web App URL</label>
+      <input type="text" id="tlWebAppInput" class="tl-set-input" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"/>
+      <button class="tl-set-btn" onclick="TL_saveWebApp()">SAVE WEB APP URL</button>
+      <div id="tlWebAppOk" class="tl-set-ok">✓ Sheets sync active — trades will auto-log</div>
+      <div class="tl-set-hint">
+        <strong style="color:#cbd5e1;">One-time setup:</strong><br>
+        1. Open your <a href="https://drive.google.com/drive/search?q=Trade%20Log" target="_blank">Trade Log sheet</a> in Drive<br>
+        2. Extensions → Apps Script → paste the code below → Save<br>
+        3. Deploy → New deployment → Web app → Execute as Me → Anyone → Deploy<br>
+        4. Copy the Web App URL → paste above → SAVE<br>
+      </div>
+    </div>
+    <div class="tl-set-section">
+      <div class="tl-set-title">Apps Script Code</div>
+      <div class="tl-code">function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['Date','Ticker','Direction','Entry $/share','Exit $/share',
+      'Entry $','Exit $','$ P&L','% Gain','Result','Notes']);
+  }
+  sheet.appendRow([
+    data.date, data.ticker, data.direction,
+    data.entryPrice, data.exitPrice || '',
+    data.entryCost || '', data.exitValue || '',
+    data.pnl || '', data.pctGain || '',
+    data.result || 'OPEN', data.notes || ''
+  ]);
+  return ContentService.createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({ok:true,status:'live'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+    </div>
+  </div>
+
   <div id="results">
     <div class="info-box">
       <div class="head">📖 Runway Options Strategy</div>
@@ -715,10 +856,12 @@ document.querySelectorAll('.tab').forEach(el => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
     activeTab = el.dataset.tab;
+    // Trade Logger tabs handle themselves in TL_updateView()
+    if (activeTab === 'trades' || activeTab === 'settings') return;
     $('pageTitle').textContent = activeTab === 'options' ? 'Options Scanner' : 'Wheel / CSP Scanner';
     $('tickerCount').textContent = currentWatchlist().length;
     renderChips();
-    if (lastResults[activeTab].length) {
+    if (lastResults[activeTab] && lastResults[activeTab].length) {
       renderResults(lastResults[activeTab]);
     } else {
       const res = $('results');
@@ -770,6 +913,269 @@ $('scanBtn').addEventListener('click', runScan);
     }
   } catch (e) {}
 })();
+</script>
+
+<!-- ── Trade Logger UI (modal + toast) ──────────────────────────────── -->
+<div class="tl-modal" id="tlModal">
+  <div class="tl-modal-inner">
+    <div class="tl-modal-title" id="tlModalTitle">Log trade</div>
+    <div class="tl-modal-sub"   id="tlModalSub"></div>
+    <input type="text" id="tlTickerField" class="tl-input ticker" placeholder="TICKER" maxlength="8" autocorrect="off" autocapitalize="characters" spellcheck="false" style="display:none;"/>
+    <select id="tlOpenSelect" class="tl-input" style="display:none;font-size:14px;text-align:left;"></select>
+    <input type="number" id="tlPriceField" class="tl-input" placeholder="0.00" inputmode="decimal" step="0.01" style="display:none;"/>
+    <div class="tl-modal-actions">
+      <button class="tl-cancel-btn" onclick="TL_closeModal()">Cancel</button>
+      <button class="tl-confirm-btn" id="tlConfirmBtn" onclick="TL_confirm()">Continue</button>
+    </div>
+  </div>
+</div>
+<div class="tl-toast" id="tlToast"></div>
+
+<script src="trade_logger.js"></script>
+<script>
+// ── Trade Logger controller ────────────────────────────────────────────────────
+var TL_step = null; // { action:'buy'|'sell', stage:'ticker'|'select'|'price', ticker:'', tradeId:'' }
+
+function TL_toast(msg, err) {
+  var t = document.getElementById('tlToast');
+  t.textContent = msg;
+  t.className = 'tl-toast' + (err ? ' err' : '') + ' show';
+  clearTimeout(TL_toast._t);
+  TL_toast._t = setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+function TL_openBuy() {
+  TL_step = { action:'buy', stage:'ticker', ticker:'', tradeId:null };
+  document.getElementById('tlModalTitle').textContent = 'Log a buy';
+  document.getElementById('tlModalSub').innerHTML = 'Which ticker did you buy?';
+  document.getElementById('tlTickerField').style.display = 'block';
+  document.getElementById('tlTickerField').value = '';
+  document.getElementById('tlOpenSelect').style.display = 'none';
+  document.getElementById('tlPriceField').style.display = 'none';
+  document.getElementById('tlConfirmBtn').textContent = 'Continue →';
+  document.getElementById('tlModal').classList.add('show');
+  setTimeout(function(){ document.getElementById('tlTickerField').focus(); }, 150);
+}
+
+function TL_openSell() {
+  var open = TradeLogger.getOpen();
+  if (!open.length) { TL_toast('No open trades to close', true); return; }
+  if (open.length === 1) {
+    TL_step = { action:'sell', stage:'price', ticker:open[0].ticker, tradeId:open[0].id };
+    TL_showPricePrompt(open[0]);
+    return;
+  }
+  TL_step = { action:'sell', stage:'select' };
+  var sel = document.getElementById('tlOpenSelect');
+  sel.innerHTML = open.map(function(t){
+    return '<option value="' + t.id + '">' + t.ticker + ' — entered $' + t.entryPrice.toFixed(2) + ' on ' + t.date + '</option>';
+  }).join('');
+  document.getElementById('tlModalTitle').textContent = 'Log a sell';
+  document.getElementById('tlModalSub').innerHTML = 'Which trade are you closing?';
+  document.getElementById('tlTickerField').style.display = 'none';
+  document.getElementById('tlOpenSelect').style.display = 'block';
+  document.getElementById('tlPriceField').style.display = 'none';
+  document.getElementById('tlConfirmBtn').textContent = 'Continue →';
+  document.getElementById('tlModal').classList.add('show');
+}
+
+function TL_showPricePrompt(trade) {
+  document.getElementById('tlModalTitle').textContent = TL_step.action === 'buy' ? 'Entry price' : 'Exit price';
+  var sub;
+  if (TL_step.action === 'buy') {
+    sub = 'You bought <span class="hl">' + TL_step.ticker + '</span> — what did you pay per share (contract price)?';
+  } else {
+    sub = 'You sold <span class="hl">' + trade.ticker + '</span> (entry $' + trade.entryPrice.toFixed(2) + ') — what did you sell for per share?';
+  }
+  document.getElementById('tlModalSub').innerHTML = sub;
+  document.getElementById('tlTickerField').style.display = 'none';
+  document.getElementById('tlOpenSelect').style.display = 'none';
+  document.getElementById('tlPriceField').style.display = 'block';
+  document.getElementById('tlPriceField').value = '';
+  document.getElementById('tlConfirmBtn').textContent = 'SAVE';
+  document.getElementById('tlModal').classList.add('show');
+  setTimeout(function(){ document.getElementById('tlPriceField').focus(); }, 150);
+  TL_step.stage = 'price';
+}
+
+function TL_confirm() {
+  if (!TL_step) return;
+  if (TL_step.action === 'buy' && TL_step.stage === 'ticker') {
+    var v = document.getElementById('tlTickerField').value.trim().toUpperCase();
+    if (!v) { TL_toast('Enter a ticker', true); return; }
+    TL_step.ticker = v;
+    TL_showPricePrompt(null);
+    return;
+  }
+  if (TL_step.action === 'sell' && TL_step.stage === 'select') {
+    var id = document.getElementById('tlOpenSelect').value;
+    var t  = TradeLogger.getTrades().find(function(x){ return x.id === id; });
+    if (!t) { TL_toast('Trade not found', true); return; }
+    TL_step.tradeId = id;
+    TL_step.ticker  = t.ticker;
+    TL_showPricePrompt(t);
+    return;
+  }
+  // price stage — save the trade
+  var price = parseFloat(document.getElementById('tlPriceField').value);
+  if (!price || price <= 0) { TL_toast('Enter a valid price', true); return; }
+  if (TL_step.action === 'buy') {
+    var t = TradeLogger.logBuy(TL_step.ticker, price);
+    if (!t) { TL_toast('Could not log trade', true); return; }
+    TL_toast('✓ ' + t.ticker + ' buy logged at $' + price.toFixed(2));
+  } else {
+    var t = TradeLogger.logSell(TL_step.tradeId, price);
+    if (!t) { TL_toast('Could not log sell', true); return; }
+    var emoji = t.pctGain >= 50 ? '🎯' : t.pctGain > 0 ? '✓' : '✗';
+    TL_toast(emoji + ' ' + t.ticker + ' closed ' + (t.pctGain > 0 ? '+' : '') + t.pctGain + '% (' + (t.pnl >= 0 ? '+$' : '−$') + Math.abs(t.pnl).toFixed(2) + ')');
+  }
+  TL_closeModal();
+  TL_renderTrades();
+}
+
+function TL_closeModal() {
+  document.getElementById('tlModal').classList.remove('show');
+  TL_step = null;
+}
+
+function TL_closeTradeById(id) {
+  var t = TradeLogger.getTrades().find(function(x){ return x.id === id; });
+  if (!t) return;
+  TL_step = { action:'sell', stage:'price', ticker:t.ticker, tradeId:id };
+  TL_showPricePrompt(t);
+}
+
+function TL_deleteTrade(id) {
+  if (!confirm('Delete this trade permanently?')) return;
+  TradeLogger.deleteTrade(id);
+  TL_renderTrades();
+  TL_toast('Trade deleted');
+}
+
+function TL_renderTrades() {
+  var trades = TradeLogger.getTrades();
+  var stats  = TradeLogger.stats();
+
+  // badge on tab
+  var b = document.getElementById('tradesTabBadge');
+  if (stats.open > 0) { b.textContent = stats.open; b.style.display = 'inline-block'; }
+  else                { b.style.display = 'none'; }
+
+  var sb = document.getElementById('tlSummary');
+  if (trades.length) {
+    sb.style.display = 'grid';
+    sb.innerHTML =
+      '<div class="tl-sum"><div class="tl-sum-val">' + stats.total + '</div><div class="tl-sum-lbl">Trades</div></div>' +
+      '<div class="tl-sum"><div class="tl-sum-val a">' + stats.open + '</div><div class="tl-sum-lbl">Open</div></div>' +
+      '<div class="tl-sum"><div class="tl-sum-val g">' + stats.winRate + '%</div><div class="tl-sum-lbl">Win rate</div></div>' +
+      '<div class="tl-sum"><div class="tl-sum-val ' + (stats.totalPnl >= 0 ? 'g' : 'r') + '">' + (stats.totalPnl >= 0 ? '+$' : '−$') + Math.abs(stats.totalPnl).toFixed(0) + '</div><div class="tl-sum-lbl">Total P&L</div></div>';
+  } else {
+    sb.style.display = 'none';
+  }
+
+  var rows = document.getElementById('tlRows');
+  if (!trades.length) {
+    rows.innerHTML = '<div class="empty"><div style="font-size:42px;">📝</div><h2>No trades yet</h2><p>Tap “I BOUGHT IT” after you enter a trade.</p></div>';
+    return;
+  }
+  rows.innerHTML = trades.map(function(t) {
+    var isOpen = !t.exitPrice;
+    var tagCls, tagTxt, pnlHtml;
+    if (isOpen) {
+      tagCls = 'tl-tag-open'; tagTxt = 'OPEN';
+      pnlHtml = '<span class="tl-pnl open">AWAITING EXIT</span>';
+    } else {
+      var isWin = (t.pnl || 0) > 0;
+      tagCls = isWin ? 'tl-tag-win' : 'tl-tag-loss';
+      tagTxt = t.result || (isWin ? 'WIN' : 'LOSS');
+      pnlHtml = '<span class="tl-pnl ' + (isWin ? 'win' : 'loss') + '">' +
+        (t.pnl >= 0 ? '+$' : '−$') + Math.abs(t.pnl).toFixed(2) +
+        ' · ' + (t.pctGain >= 0 ? '+' : '') + t.pctGain + '%</span>';
+    }
+    return '<div class="tl-row' + (isOpen ? ' open' : '') + '">' +
+      '<div class="tl-row-head">' +
+        '<span class="tl-row-ticker">' + t.ticker + '</span>' +
+        '<span class="tl-row-tag ' + tagCls + '">' + tagTxt + '</span>' +
+        '<span class="tl-row-date">' + t.date + '</span>' +
+      '</div>' +
+      '<div class="tl-row-body">' +
+        'Entry: <span class="ev">$' + t.entryPrice.toFixed(2) + '/share</span>' +
+        ' · Cost: <span class="ev">$' + (t.entryCost || (t.entryPrice * 100)).toFixed(2) + '</span>' +
+        (t.exitPrice ? ' · Exit: <span class="ev">$' + t.exitPrice.toFixed(2) + '/share</span>' : '') +
+      '</div>' +
+      '<div class="tl-row-foot">' +
+        pnlHtml +
+        (isOpen
+          ? '<button class="tl-close-btn" onclick="TL_closeTradeById(\'' + t.id + '\')">SELL IT →</button>'
+          : '<button class="tl-delete-btn" onclick="TL_deleteTrade(\'' + t.id + '\')">delete</button>') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function TL_saveWebApp() {
+  var v = document.getElementById('tlWebAppInput').value.trim();
+  var ok = TradeLogger.setWebAppUrl(v);
+  if (!ok) { TL_toast('Paste the full https://... URL', true); return; }
+  document.getElementById('tlWebAppOk').classList.toggle('show', !!v);
+  TL_toast(v ? '✓ Sheets sync active' : 'Sheets sync cleared');
+}
+
+function TL_initSettings() {
+  var url = TradeLogger.getWebAppUrl();
+  if (url) {
+    document.getElementById('tlWebAppInput').value = url;
+    document.getElementById('tlWebAppOk').classList.add('show');
+  }
+}
+
+// Show/hide tab views based on active tab (patches existing tab listener)
+function TL_updateView() {
+  var active = document.querySelector('.tab.active');
+  var tab = active ? active.dataset.tab : 'options';
+  var results = document.getElementById('results');
+  var chips   = document.getElementById('chips');
+  var status  = document.getElementById('status');
+  var progress= document.querySelector('.progress');
+  var trades  = document.getElementById('tradesView');
+  var settings= document.getElementById('settingsView');
+  var scanBtn = document.getElementById('scanBtn');
+  var pageTitle = document.getElementById('pageTitle');
+
+  var showScanner  = (tab === 'options' || tab === 'wheel');
+  results.style.display  = showScanner ? '' : 'none';
+  chips.style.display    = showScanner ? '' : 'none';
+  status.style.display   = showScanner ? '' : 'none';
+  if (progress) progress.style.display = showScanner ? '' : 'none';
+  scanBtn.style.display  = showScanner ? '' : 'none';
+  trades.style.display   = (tab === 'trades')   ? '' : 'none';
+  settings.style.display = (tab === 'settings') ? '' : 'none';
+
+  if (tab === 'trades')   { pageTitle.textContent = 'Trades'; TL_renderTrades(); }
+  if (tab === 'settings') { pageTitle.textContent = 'Settings'; TL_initSettings(); }
+}
+
+// Hook tab clicks (in addition to existing scanner logic)
+document.querySelectorAll('.tab').forEach(function(el) {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    el.classList.add('active');
+    TL_updateView();
+  });
+});
+
+// Keyboard: Enter to confirm modal
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && document.getElementById('tlModal').classList.contains('show')) {
+    e.preventDefault(); TL_confirm();
+  }
+  if (e.key === 'Escape' && document.getElementById('tlModal').classList.contains('show')) {
+    TL_closeModal();
+  }
+});
+
+// Init on load
+TL_renderTrades();
 </script>
 
 </body>

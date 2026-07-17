@@ -297,15 +297,23 @@ def main():
     signals = []
     pushed = 0
 
+    try:
+        from signal_log import log_signal
+    except Exception:
+        log_signal = None
+
     for i, ticker in enumerate(WATCHLIST):
         print(f"[{i+1}/{len(WATCHLIST)}] {ticker}")
         bars, prev = fetch_intraday(ticker)
         sig = analyze(ticker, bars, prev) if bars else None
         if sig:
             signals.append(sig)
-            if sig['score'] >= NOTIFY_MIN_SCORE:
+            did_push = sig['score'] >= NOTIFY_MIN_SCORE
+            if did_push:
                 push_signal(sig)
                 pushed += 1
+            if log_signal is not None:
+                log_signal('live', sig, pushed=did_push)
         time.sleep(0.3)  # Yahoo is generous, but be polite
 
     signals.sort(key=lambda s: s['score'], reverse=True)

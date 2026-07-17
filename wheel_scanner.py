@@ -239,12 +239,29 @@ def main():
     print(f"Min annual yield: {MIN_ANNUAL_YIELD*100:.0f}%")
     print(f"{'='*60}\n")
 
+    try:
+        from signal_log import log_signal
+    except Exception:
+        log_signal = None
+
     results = []
     for i, t in enumerate(WHEEL_WATCHLIST):
         print(f"[{i+1}/{len(WHEEL_WATCHLIST)}] {t}")
         r = analyze(t)
         if r:
             results.append(r)
+            if log_signal is not None:
+                normalized = {
+                    'ticker':        r.get('ticker'),
+                    'trend':         'WHEEL',
+                    'score':         r.get('score'),
+                    'price':         r.get('price'),
+                    'strike':        r.get('strike'),
+                    'contract_type': 'PUT_SELL',
+                    'est_cost':      r.get('premium_share'),
+                    'rsi':           r.get('rsi'),
+                }
+                log_signal('wheel', normalized, pushed=(r.get('tier') == 'STRONG'))
         time.sleep(0.3)
 
     results.sort(key=lambda r: r['score'], reverse=True)

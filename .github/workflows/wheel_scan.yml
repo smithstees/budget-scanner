@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: '0 1 * * 1'  # 1:00 UTC Monday = 9pm ET Sunday
 
+permissions:
+  contents: write
+
 jobs:
   wheel-scan:
     runs-on: ubuntu-latest
@@ -21,3 +24,15 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python wheel_scanner.py
+
+      - name: Commit signal log
+        if: always()
+        run: |
+          if [ -f signals.jsonl ] && ! git diff --quiet signals.jsonl; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add signals.jsonl
+            git commit -m 'chore: append wheel scanner signals [skip ci]'
+            git pull --rebase origin main || true
+            git push
+          fi

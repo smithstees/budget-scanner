@@ -345,15 +345,24 @@ def main():
     signals = []
     pushed = 0
 
+    # Signal history log (for weekly backtest_review.py)
+    try:
+        from signal_log import log_signal
+    except Exception:
+        log_signal = None
+
     for i, ticker in enumerate(WATCHLIST):
         print(f"[{i+1}/{len(WATCHLIST)}] {ticker}")
         sig = analyze(ticker)
         if sig:
             signals.append(sig)
-            if sig['score'] >= NOTIFY_MIN_SCORE:
+            did_push = sig['score'] >= NOTIFY_MIN_SCORE
+            if did_push:
                 push_signal(sig)
                 pushed += 1
                 time.sleep(2)
+            if log_signal is not None:
+                log_signal('nightly', sig, pushed=did_push)
         time.sleep(DELAY)
 
     signals.sort(key=lambda s: s['score'], reverse=True)

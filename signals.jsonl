@@ -11,3 +11,4 @@
 {"scanner":"live","ts":"2026-07-17T15:38:35+00:00","date":"2026-07-17","ticker":"VALE","trend":"BEARISH","score":30,"price":14.244999885559082,"strike":10.0,"contract_type":"PUT","est_cost":0.23,"rel_vol":0.8,"atr_pct":0.19,"rsi":66,"pushed":false}
 {"scanner":"live","ts":"2026-07-17T15:38:36+00:00","date":"2026-07-17","ticker":"ITUB","trend":"BEARISH","score":39,"price":8.25,"strike":6.0,"contract_type":"PUT","est_cost":0.14,"rel_vol":1.6,"atr_pct":0.28,"rsi":73,"pushed":false}
 {"scanner":"live","ts":"2026-07-17T15:38:36+00:00","date":"2026-07-17","ticker":"BBD","trend":"BEARISH","score":30,"price":3.575000047683716,"strike":1.5,"contract_type":"PUT","est_cost":0.06,"rel_vol":0.9,"atr_pct":0.36,"rsi":67,"pushed":false}
+{"scanner":"chatty","ts":"2026-07-17T15:56:52+00:00","date":"2026-07-17","ticker":"SNAP","trend":"neutral_dip","score":35,"price":4.69,"strike":6.5,"contract_type":"CALL","est_cost":0.16,"rel_vol":1.2,"atr_pct":3.8,"pushed":false}

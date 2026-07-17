@@ -31,7 +31,11 @@ def _ascii(s):
              .replace("\u2605", "*").replace("\u2606", "*")
              .replace("\u26a1", "!").encode("ascii", "ignore").decode("ascii"))
 
-NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
+try:
+    import config
+    NTFY_TOPIC = config.NTFY_TOPIC
+except Exception:
+    NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
 YAHOO_URL  = 'https://query1.finance.yahoo.com/v8/finance/chart/'
 
 # Stocks that make reasonable wheel candidates: sub-$10 (so 100 shares

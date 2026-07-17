@@ -29,7 +29,11 @@ except Exception:
 
 # ── Config ────────────────────────────────────────────────────────────────────
 MASSIVE_KEY = os.environ.get("POLYGON_KEY", "")
-NTFY_TOPIC  = os.environ.get("NTFY_TOPIC", "ragebudgetopt")
+try:
+    import config
+    NTFY_TOPIC  = config.NTFY_TOPIC
+except Exception:
+    NTFY_TOPIC  = os.environ.get("NTFY_TOPIC", "ragebudgetopt")
 BASE_URL    = "https://api.massive.com"
 
 # Tickers per Chatty parameters

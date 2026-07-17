@@ -48,7 +48,7 @@ QUALITY_STRICT = os.environ.get("QUALITY_STRICT", "1") == "1"
 IV_RANK_CEILING = 60.0
 
 # Earnings within N days = skip (post-earnings IV crush kills options).
-EARNINGS_BLACKOUT_DAYS = 14
+EARNINGS_BLACKOUT_DAYS = int(os.environ.get("EARNINGS_BLACKOUT_DAYS", "21"))
 
 # Liquidity minimums
 MIN_OPEN_INTEREST = 100

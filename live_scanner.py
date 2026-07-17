@@ -28,9 +28,16 @@ try:
     _CFG_MIN = config.STOCK_PRICE_MIN
     _CFG_MAX = config.STOCK_PRICE_MAX
 except Exception:
+    config = None
     NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
     _CFG_MIN = 2.0
     _CFG_MAX = 15.0
+
+try:
+    import scanner_quality as sq
+except Exception as e:
+    print(f"scanner_quality unavailable: {e}")
+    sq = None
 YAHOO_URL  = 'https://query1.finance.yahoo.com/v8/finance/chart/'
 
 # Same budget-friendly watchlist as the nightly scanner
@@ -294,6 +301,58 @@ def push_summary(signals, pushed):
     except: pass
 
 
+def _enrich_live(sig, regime):
+    """
+    Same quality checks as nightly, applied only to candidate pushes to keep
+    intraday fast. Returns (sig, ok, reasons).
+    """
+    reasons = []
+    ticker = sig['ticker']
+
+    # Earnings blackout (biggest single cause of IV-crush losses on longs)
+    if sq.has_earnings_within(ticker, config.EARNINGS_BLACKOUT_DAYS) is True:
+        sig['earnings_within_days'] = config.EARNINGS_BLACKOUT_DAYS
+        reasons.append(f"Earnings within {config.EARNINGS_BLACKOUT_DAYS}d (IV crush risk)")
+
+    # IV rank ceiling (paying up for premium)
+    ivr = sq.iv_rank(ticker)
+    if ivr is not None:
+        sig['iv_rank'] = ivr
+        if ivr > config.IV_RANK_CEILING:
+            reasons.append(f"IV Rank {ivr} > {config.IV_RANK_CEILING}")
+
+    # Real delta strike + liquidity
+    direction = sig.get('trend', 'BULLISH')
+    real = sq.target_delta_strike(ticker, sig['price'], 35, direction)
+    if real:
+        sig['real_strike']       = real['strike']
+        sig['real_expiry']       = real['expiry']
+        sig['real_delta']        = real['delta']
+        sig['real_iv']           = real['iv']
+        sig['real_oi']           = real['oi']
+        sig['real_mid']          = real['mid']
+        sig['real_spread_pct']   = real['spread_pct']
+        sig['real_est_contract'] = round(real['mid'] * 100)
+        if not sq.is_liquid(real):
+            reasons.append(
+                f"Illiquid OI={real['oi']} spread={int(real['spread_pct']*100)}%"
+            )
+
+    # SPY regime bias
+    score = sig.get('score', 0)
+    if regime == 'BEARISH' and direction == 'BULLISH' and score < 65:
+        reasons.append("SPY < 200d SMA; CALL below high-conviction cutoff")
+    elif regime == 'BULLISH' and direction == 'BEARISH' and score < 65:
+        reasons.append("SPY > 200d SMA; PUT below high-conviction cutoff")
+
+    sig['quality_blocks'] = reasons
+    ok = (not reasons) if config.QUALITY_STRICT else True
+    if reasons:
+        for r in reasons:
+            print(f"  [quality]  {r}")
+    return sig, ok, reasons
+
+
 def main():
     print(f"\n{'='*60}")
     print(f"Live Scanner — {datetime.now().strftime('%Y-%m-%d %H:%M')}")
@@ -310,16 +369,32 @@ def main():
     except Exception:
         log_signal = None
 
+    # SPY regime once per run (cached in scanner_quality)
+    if sq is not None:
+        regime = sq.spy_regime()
+        det = sq.spy_details()
+        print(f"SPY regime: {regime}  (last={det.get('last')}, 200d SMA={det.get('sma')})")
+    else:
+        regime = 'NEUTRAL'
+        print("Quality module unavailable (running unfiltered)")
+
     for i, ticker in enumerate(WATCHLIST):
         print(f"[{i+1}/{len(WATCHLIST)}] {ticker}")
         bars, prev = fetch_intraday(ticker)
         sig = analyze(ticker, bars, prev) if bars else None
         if sig:
+            # Only enrich signals that could actually push — saves Yahoo calls
+            candidate_push = sig['score'] >= NOTIFY_MIN_SCORE
+            if candidate_push and sq is not None and config is not None:
+                sig, ok, reasons = _enrich_live(sig, regime)
+            else:
+                ok = True
             signals.append(sig)
-            did_push = sig['score'] >= NOTIFY_MIN_SCORE
+            did_push = candidate_push and ok
             if did_push:
                 push_signal(sig)
                 pushed += 1
+                time.sleep(0.5)
             if log_signal is not None:
                 log_signal('live', sig, pushed=did_push)
         time.sleep(0.3)  # Yahoo is generous, but be polite

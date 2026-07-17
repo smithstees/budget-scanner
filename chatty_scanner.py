@@ -274,6 +274,11 @@ def main():
         )
         return
 
+    try:
+        from signal_log import log_signal
+    except Exception:
+        log_signal = None
+
     results = []
     for ticker, meta in TICKERS.items():
         print(f"Checking {ticker} ({meta['type']})...", end=" ", flush=True)
@@ -281,6 +286,21 @@ def main():
         if sig:
             results.append(sig)
             print(f"${sig['price']} {sig['change_pct']}% — {sig['probability']}% prob ✓")
+            if log_signal is not None:
+                # Normalize field names to shared schema
+                normalized = {
+                    'ticker':        sig.get('ticker'),
+                    'trend':         sig.get('trend'),
+                    'score':         sig.get('probability'),
+                    'price':         sig.get('price'),
+                    'strike':        sig.get('otm_strike'),
+                    'contract_type': 'CALL',
+                    'est_cost':      sig.get('est_cost'),
+                    'rel_vol':       sig.get('rel_vol'),
+                    'atr_pct':       sig.get('atr_pct'),
+                }
+                did_push = sig.get('probability', 0) >= NOTIFY_MIN_PROB
+                log_signal('chatty', normalized, pushed=did_push)
         else:
             print("no setup")
         time.sleep(0.5)

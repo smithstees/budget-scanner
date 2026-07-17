@@ -24,6 +24,13 @@ PRIOR REVISIONS:
 import os, time, math, json, urllib.request, urllib.parse
 from datetime import datetime, timedelta
 
+import config
+try:
+    import scanner_quality as sq
+except Exception as e:
+    print(f"scanner_quality unavailable: {e}")
+    sq = None
+
 def _ascii(s):
     # ntfy Title header must be latin-1 safe. Strip fancy unicode.
     return (s.replace("\u2014", "-").replace("\u2013", "-")
@@ -31,44 +38,17 @@ def _ascii(s):
              .replace("\u2605", "*").replace("\u2606", "*")
              .replace("\u26a1", "!").encode("ascii", "ignore").decode("ascii"))
 
-# CONFIG
+# CONFIG (values come from config.py; env vars are already respected there)
 API_KEY   = os.environ.get('POLYGON_KEY', '')
-NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
+NTFY_TOPIC = config.NTFY_TOPIC
 BASE_URL  = 'https://api.massive.com'
 
-# Only stocks whose ATM/near-money 2-4 week options typically trade under
-# $0.20/share ($20/contract). Anything priced >$15 rarely fits that budget.
-WATCHLIST = [
-  # Fintech / lending (cheap end)
-  'SOFI','OPEN',
-  # Airlines / cruise (low-priced volatile names)
-  'JBLU','AAL','CCL','NCLH',
-  # EVs / mobility
-  'RIVN','LCID','JOBY','ACHR','WKHS','NIO','XPEV','LI',
-  # Crypto miners (small-caps only)
-  'MARA','RIOT','CLSK','CIFR','WULF',
-  # Social / consumer
-  'SNAP','PINS',
-  # Cannabis / small-cap speculative
-  'TLRY','SNDL','CLOV','ATER','IDEX','MVIS',
-  # Telecom / media low-priced
-  'NOK','SIRI','T',
-  # Health / other budget names
-  'SENS','GRAB','F','LYFT','PLUG','SPWR','ENVX',
-  # Brazilian ADRs / shipping (typically cheap)
-  'VALE','ITUB','BBD','ZIM',
-]
-
-DELAY = 13  # free tier: 5 calls/min
-
-# Price band for the underlying stock. Below $2 = often delisted/illiquid.
-# Above $15 = options usually cost > $20/contract at reasonable strikes.
-STOCK_PRICE_MIN = 2.0
-STOCK_PRICE_MAX = 15.0
-
-# Only push notifications for signals scoring at least this high.
-# Weak/moderate setups are logged but not pinged, so the phone doesn't spam.
-NOTIFY_MIN_SCORE = 60
+# Watchlist + price band + push threshold all sourced from config.py
+WATCHLIST = config.WATCHLIST_TICKERS
+DELAY = config.POLYGON_DELAY_SEC
+STOCK_PRICE_MIN = config.STOCK_PRICE_MIN
+STOCK_PRICE_MAX = config.STOCK_PRICE_MAX
+NOTIFY_MIN_SCORE = config.NOTIFY_MIN_SCORE
 
 def fetch_candles(ticker):
     end = datetime.now()
@@ -258,18 +238,36 @@ def push_signal(sig):
     vol_tag = 'HIGH VOL' if sig['rel_vol'] >= 2.0 else 'vol+' if sig['rel_vol'] >= 1.5 else ''
     title = f"[{direction}] {sig['ticker']} - {sig['tier']} {sig['score']}% {vol_tag}"
 
-    est_contract = round(sig['est_cost'] * 100)
+    # Prefer real chain data when available, fall back to ATR estimate
+    if sig.get('real_strike'):
+        strike     = sig['real_strike']
+        expiry     = sig['real_expiry']
+        est_contract = sig['real_est_contract']
+        delta_info = f" Δ{sig['real_delta']}"
+        oi_info    = f" OI={sig['real_oi']}"
+        iv_info    = f" IV={sig['real_iv']}"
+    else:
+        strike     = sig['strike']
+        expiry     = "30-45 days out"
+        est_contract = round(sig['est_cost'] * 100)
+        delta_info = ""
+        oi_info    = " OI>=100"
+        iv_info    = ""
+
+    ivr_info = f" IVR={sig['iv_rank']}" if sig.get('iv_rank') is not None else ""
+
     # Delta-exit target: sell when stock is 65% of the way from current to strike
     if sig['trend'] == 'BULLISH':
-        sell_zone = round(sig['price'] + 0.65 * (sig['strike'] - sig['price']), 2)
+        sell_zone = round(sig['price'] + 0.65 * (strike - sig['price']), 2)
     else:
-        sell_zone = round(sig['price'] - 0.65 * (sig['price'] - sig['strike']), 2)
+        sell_zone = round(sig['price'] - 0.65 * (sig['price'] - strike), 2)
     body = (
         f"${sig['price']:.2f} ({'+' if sig['chg']>0 else ''}{sig['chg']:.2f}%)\n"
-        f"Signal: {sig['trend']} | RSI: {sig['rsi']} | Vol: {sig['rel_vol']}x\n"
+        f"Signal: {sig['trend']} | RSI: {sig['rsi']} | Vol: {sig['rel_vol']}x"
+        f"{ivr_info}\n"
         f"ATR: {sig['atr_pct']}%\n"
-        f"Buy {sig['contract_type']} strike ${sig['strike']:.2f} (3-5 OTM)\n"
-        f"Expiry 30-45 days | est ~${est_contract}/contract | OI > 50\n"
+        f"Buy {sig['contract_type']} strike ${strike:.2f}{delta_info}{iv_info}{oi_info}\n"
+        f"Expiry {expiry} | est ~${est_contract}/contract\n"
         f"SELL when stock hits ~${sell_zone:.2f} (likely +80-200% gain)\n"
         f"Stop: -60% on contract"
     )
@@ -331,11 +329,91 @@ def push_summary(signals, pushed_count):
         with urllib.request.urlopen(req, timeout=10): pass
     except: pass
 
+def enrich_and_filter(sig, regime, verbose=True):
+    """
+    Enrich a raw signal with quality data (IV rank, earnings, real strike,
+    liquidity) and decide whether it should still be pushed given quality
+    filters + SPY regime.
+
+    Returns (sig, should_push_ok, reasons_blocked_list).
+
+    In strict mode (config.QUALITY_STRICT), any block reason → no push.
+    In loose mode, reasons are logged into the signal but push proceeds.
+    """
+    reasons = []
+    if sq is None:
+        return sig, True, reasons
+
+    ticker = sig['ticker']
+
+    # IV Rank ceiling (skip long premium when IV is elevated)
+    ivr = sq.iv_rank(ticker)
+    if ivr is not None:
+        sig['iv_rank'] = ivr
+        if ivr > config.IV_RANK_CEILING:
+            reasons.append(f"IV Rank {ivr} > {config.IV_RANK_CEILING} (long options expensive)")
+
+    # Earnings blackout
+    earnings_soon = sq.has_earnings_within(ticker, config.EARNINGS_BLACKOUT_DAYS)
+    if earnings_soon is True:
+        sig['earnings_within_14d'] = True
+        reasons.append(f"Earnings within {config.EARNINGS_BLACKOUT_DAYS}d (IV crush risk)")
+
+    # Real delta strike from Nasdaq chain
+    direction = sig.get('trend', 'BULLISH')
+    # Target ~35 days out (middle of 30-45 window)
+    real = sq.target_delta_strike(ticker, sig['price'], 35, direction)
+    if real:
+        sig['real_strike']       = real['strike']
+        sig['real_expiry']       = real['expiry']
+        sig['real_tte_days']     = real['tte_days']
+        sig['real_delta']        = real['delta']
+        sig['real_iv']           = real['iv']
+        sig['real_mid']          = real['mid']
+        sig['real_bid']          = real['bid']
+        sig['real_ask']          = real['ask']
+        sig['real_oi']           = real['oi']
+        sig['real_spread_pct']   = real['spread_pct']
+        sig['real_est_contract'] = round(real['mid'] * 100)
+        # Liquidity check
+        if not sq.is_liquid(real):
+            reasons.append(
+                f"Illiquid: OI={real['oi']} spread={int(real['spread_pct']*100)}%"
+            )
+    else:
+        reasons.append("No delta-0.25–0.35 strike found in chain")
+
+    # SPY regime bias
+    if regime == 'BEARISH' and direction == 'BULLISH' and sig.get('score', 0) < 65:
+        reasons.append("SPY < 200d SMA; CALL below high-conviction score cutoff")
+    elif regime == 'BULLISH' and direction == 'BEARISH' and sig.get('score', 0) < 65:
+        reasons.append("SPY > 200d SMA; PUT below high-conviction score cutoff")
+
+    sig['quality_blocks'] = reasons
+    ok = (not reasons) if config.QUALITY_STRICT else True
+
+    if verbose and reasons:
+        for r in reasons:
+            print(f"  [quality]  {r}")
+    return sig, ok, reasons
+
+
 def main():
     print(f"\n{'='*50}")
     print(f"Nightly Scanner -- {datetime.now().strftime('%Y-%m-%d %H:%M ET')}")
     print(f"Tickers: {len(WATCHLIST)} | Delay: {DELAY}s | Free tier")
     print(f"Stock band: ${STOCK_PRICE_MIN}-${STOCK_PRICE_MAX} | Push threshold: score>={NOTIFY_MIN_SCORE}")
+    if sq is not None:
+        regime = sq.spy_regime()
+        det = sq.spy_details()
+        print(f"SPY regime: {regime}  (last={det.get('last')}, 200d SMA={det.get('sma')})")
+        print(f"Quality filters: IV≤{config.IV_RANK_CEILING} | earnings blackout {config.EARNINGS_BLACKOUT_DAYS}d | "
+              f"OI≥{config.MIN_OPEN_INTEREST} | spread≤{int(config.MAX_SPREAD_PCT_OF_MID*100)}% | "
+              f"delta {config.TARGET_DELTA_MIN}–{config.TARGET_DELTA_MAX} | "
+              f"strict={config.QUALITY_STRICT}")
+    else:
+        regime = 'NEUTRAL'
+        print("Quality module unavailable (running unfiltered)")
     print(f"{'='*50}\n")
 
     if not API_KEY:
@@ -351,21 +429,47 @@ def main():
     except Exception:
         log_signal = None
 
+    # First pass: collect all raw signals (no push yet)
+    raw = []
     for i, ticker in enumerate(WATCHLIST):
         print(f"[{i+1}/{len(WATCHLIST)}] {ticker}")
-        sig = analyze(ticker)
-        if sig:
-            signals.append(sig)
-            did_push = sig['score'] >= NOTIFY_MIN_SCORE
-            if did_push:
-                push_signal(sig)
-                pushed += 1
-                time.sleep(2)
-            if log_signal is not None:
-                log_signal('nightly', sig, pushed=did_push)
+        s = analyze(ticker)
+        if s:
+            raw.append(s)
         time.sleep(DELAY)
 
-    signals.sort(key=lambda s: s['score'], reverse=True)
+    if not raw:
+        push_summary([], 0)
+        return
+
+    # Sort by score, then apply quality + sector caps
+    raw.sort(key=lambda s: s.get('score', 0), reverse=True)
+
+    sector_cap = sq.SectorCap() if sq is not None else None
+
+    for sig in raw:
+        sig, ok, reasons = enrich_and_filter(sig, regime, verbose=False)
+        signals.append(sig)
+
+        should_push = ok and sig['score'] >= NOTIFY_MIN_SCORE
+
+        # Sector cap only limits *pushes*, not the log
+        if should_push and sector_cap is not None:
+            sector = config.sector_of(sig['ticker'])
+            if not sector_cap.try_accept(sector):
+                sig.setdefault('quality_blocks', []).append(
+                    f"Sector cap hit ({sector})"
+                )
+                should_push = False
+
+        if should_push:
+            push_signal(sig)
+            pushed += 1
+            time.sleep(2)
+
+        if log_signal is not None:
+            log_signal('nightly', sig, pushed=should_push)
+
     push_summary(signals, pushed)
 
     print(f"\n{'='*50}")
@@ -374,8 +478,12 @@ def main():
         print("\nTop signals (by score):")
         for s in signals[:8]:
             marker = "PUSH" if s['score'] >= NOTIFY_MIN_SCORE else "----"
+            blocks = s.get('quality_blocks', [])
+            block_str = f"  [BLOCKED: {'; '.join(blocks)}]" if blocks else ""
+            real_str = f" real:${s.get('real_strike',0):.2f}@d{s.get('real_delta',0):.2f}" if s.get('real_strike') else ""
             print(f"  {marker} {s['ticker']:6} {s['trend']:8} score:{s['score']} "
-                  f"{s['contract_type']} near ${s['strike']:.2f} est ${round(s['est_cost']*100)}")
+                  f"{s['contract_type']} near ${s['strike']:.2f} est ${round(s['est_cost']*100)}"
+                  f"{real_str}{block_str}")
     print(f"{'='*50}\n")
 
 if __name__ == '__main__':

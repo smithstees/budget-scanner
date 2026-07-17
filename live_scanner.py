@@ -22,7 +22,15 @@ def _ascii(s):
              .replace("\u2605", "*").replace("\u2606", "*")
              .replace("\u26a1", "!").encode("ascii", "ignore").decode("ascii"))
 
-NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
+try:
+    import config
+    NTFY_TOPIC = config.NTFY_TOPIC
+    _CFG_MIN = config.STOCK_PRICE_MIN
+    _CFG_MAX = config.STOCK_PRICE_MAX
+except Exception:
+    NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
+    _CFG_MIN = 2.0
+    _CFG_MAX = 15.0
 YAHOO_URL  = 'https://query1.finance.yahoo.com/v8/finance/chart/'
 
 # Same budget-friendly watchlist as the nightly scanner
@@ -38,8 +46,8 @@ WATCHLIST = [
   'VALE','ITUB','BBD','ZIM',
 ]
 
-STOCK_PRICE_MIN = 2.0
-STOCK_PRICE_MAX = 15.0
+STOCK_PRICE_MIN = _CFG_MIN
+STOCK_PRICE_MAX = _CFG_MAX
 NOTIFY_MIN_SCORE = 55  # slightly lower than nightly since intraday moves faster
 
 

@@ -160,3 +160,5 @@
 {"scanner":"live","ts":"2026-07-22T15:51:45+00:00","date":"2026-07-22","ticker":"BBD","trend":"BEARISH","score":25,"price":3.6649999618530273,"strike":1.5,"contract_type":"PUT","est_cost":0.06,"rel_vol":1.1,"atr_pct":0.26,"rsi":83,"pushed":false}
 {"scanner":"chatty","ts":"2026-07-22T16:01:35+00:00","date":"2026-07-22","ticker":"F","trend":"neutral_dip","score":35,"price":14.27,"strike":18.0,"contract_type":"CALL","est_cost":0.43,"rel_vol":1.1,"atr_pct":3.0,"pushed":false}
 {"scanner":"chatty","ts":"2026-07-22T16:01:36+00:00","date":"2026-07-22","ticker":"JBLU","trend":"neutral_dip","score":70,"price":5.35,"strike":7.5,"contract_type":"CALL","est_cost":0.22,"rel_vol":0.8,"atr_pct":5.2,"pushed":true}
+{"scanner":"chatty","ts":"2026-07-22T16:16:51+00:00","date":"2026-07-22","ticker":"F","trend":"neutral_dip","score":35,"price":14.27,"strike":18.0,"contract_type":"CALL","est_cost":0.43,"rel_vol":1.1,"atr_pct":3.0,"pushed":false}
+{"scanner":"chatty","ts":"2026-07-22T16:16:52+00:00","date":"2026-07-22","ticker":"JBLU","trend":"neutral_dip","score":70,"price":5.35,"strike":7.5,"contract_type":"CALL","est_cost":0.22,"rel_vol":0.8,"atr_pct":5.2,"pushed":true}

@@ -361,3 +361,4 @@
 {"scanner":"live","ts":"2026-07-28T16:15:30+00:00","date":"2026-07-28","ticker":"VALE","trend":"BEARISH","score":40,"price":14.795000076293945,"strike":11.0,"contract_type":"PUT","est_cost":0.24,"rel_vol":0.7,"atr_pct":0.18,"rsi":93,"pushed":false}
 {"scanner":"live","ts":"2026-07-28T16:15:30+00:00","date":"2026-07-28","ticker":"ITUB","trend":"BEARISH","score":25,"price":8.39009952545166,"strike":6.5,"contract_type":"PUT","est_cost":0.13,"rel_vol":0.7,"atr_pct":0.15,"rsi":71,"pushed":false}
 {"scanner":"chatty","ts":"2026-07-28T16:18:38+00:00","date":"2026-07-28","ticker":"IWM","trend":"bearish","score":55,"price":292.91,"strike":297.0,"contract_type":"CALL","est_cost":6.3,"rel_vol":0.9,"atr_pct":1.3,"pushed":true}
+{"scanner":"chatty","ts":"2026-07-28T16:29:38+00:00","date":"2026-07-28","ticker":"IWM","trend":"bearish","score":55,"price":292.91,"strike":297.0,"contract_type":"CALL","est_cost":6.3,"rel_vol":0.9,"atr_pct":1.3,"pushed":true}

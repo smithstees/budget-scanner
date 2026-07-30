@@ -444,3 +444,4 @@
 {"scanner":"live","ts":"2026-07-30T16:00:22+00:00","date":"2026-07-30","ticker":"ITUB","trend":"BEARISH","score":55,"price":8.395000457763672,"strike":6.5,"contract_type":"PUT","est_cost":0.13,"rel_vol":0.9,"atr_pct":0.18,"rsi":67,"pushed":false}
 {"scanner":"live","ts":"2026-07-30T16:00:23+00:00","date":"2026-07-30","ticker":"BBD","trend":"BEARISH","score":40,"price":3.565000057220459,"strike":1.5,"contract_type":"PUT","est_cost":0.06,"rel_vol":0.6,"atr_pct":0.35,"rsi":69,"pushed":false}
 {"scanner":"chatty","ts":"2026-07-30T16:07:03+00:00","date":"2026-07-30","ticker":"IWM","trend":"bearish","score":85,"price":288.57,"strike":293.0,"contract_type":"CALL","est_cost":6.2,"rel_vol":1.6,"atr_pct":1.3,"pushed":true}
+{"scanner":"chatty","ts":"2026-07-30T16:22:52+00:00","date":"2026-07-30","ticker":"IWM","trend":"bearish","score":85,"price":288.57,"strike":293.0,"contract_type":"CALL","est_cost":6.2,"rel_vol":1.6,"atr_pct":1.3,"pushed":true}

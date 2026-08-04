@@ -590,3 +590,4 @@
 {"scanner":"live","ts":"2026-08-04T16:22:30+00:00","date":"2026-08-04","ticker":"ITUB","trend":"BULLISH","score":30,"price":8.395000457763672,"strike":10.5,"contract_type":"CALL","est_cost":0.13,"rel_vol":0.5,"atr_pct":0.16,"rsi":42,"pushed":false}
 {"scanner":"live","ts":"2026-08-04T16:22:33+00:00","date":"2026-08-04","ticker":"BBD","trend":"BULLISH","score":55,"price":3.5450000762939453,"strike":5.5,"contract_type":"CALL","est_cost":0.06,"rel_vol":1.1,"atr_pct":0.29,"rsi":35,"pushed":false}
 {"scanner":"chatty","ts":"2026-08-04T16:27:37+00:00","date":"2026-08-04","ticker":"F","trend":"bearish","score":65,"price":14.43,"strike":18.0,"contract_type":"CALL","est_cost":0.6,"rel_vol":0.7,"atr_pct":5.3,"pushed":true}
+{"scanner":"chatty","ts":"2026-08-04T16:48:02+00:00","date":"2026-08-04","ticker":"F","trend":"bearish","score":65,"price":14.43,"strike":18.0,"contract_type":"CALL","est_cost":0.6,"rel_vol":0.7,"atr_pct":5.3,"pushed":true}

@@ -720,3 +720,6 @@
 {"scanner":"chatty","ts":"2026-08-07T15:26:40+00:00","date":"2026-08-07","ticker":"F","trend":"bearish","score":90,"price":13.79,"strike":18.0,"contract_type":"CALL","est_cost":0.47,"rel_vol":1.0,"atr_pct":3.8,"pushed":true}
 {"scanner":"chatty","ts":"2026-08-07T15:26:41+00:00","date":"2026-08-07","ticker":"JBLU","trend":"bearish","score":65,"price":6.19,"strike":8.0,"contract_type":"CALL","est_cost":0.24,"rel_vol":0.5,"atr_pct":4.7,"pushed":true}
 {"scanner":"chatty","ts":"2026-08-07T15:26:42+00:00","date":"2026-08-07","ticker":"IWM","trend":"neutral_dip","score":40,"price":298.25,"strike":302.0,"contract_type":"CALL","est_cost":7.16,"rel_vol":0.7,"atr_pct":1.8,"pushed":false}
+{"scanner":"chatty","ts":"2026-08-07T15:50:43+00:00","date":"2026-08-07","ticker":"F","trend":"bearish","score":90,"price":13.79,"strike":18.0,"contract_type":"CALL","est_cost":0.47,"rel_vol":1.0,"atr_pct":3.8,"pushed":true}
+{"scanner":"chatty","ts":"2026-08-07T15:50:44+00:00","date":"2026-08-07","ticker":"JBLU","trend":"bearish","score":65,"price":6.19,"strike":8.0,"contract_type":"CALL","est_cost":0.24,"rel_vol":0.5,"atr_pct":4.7,"pushed":true}
+{"scanner":"chatty","ts":"2026-08-07T15:50:45+00:00","date":"2026-08-07","ticker":"IWM","trend":"neutral_dip","score":40,"price":298.25,"strike":302.0,"contract_type":"CALL","est_cost":7.16,"rel_vol":0.7,"atr_pct":1.8,"pushed":false}

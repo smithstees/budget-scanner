@@ -1028,3 +1028,4 @@
 {"scanner":"live","ts":"2026-08-17T14:43:09+00:00","date":"2026-08-17","ticker":"SENS","trend":"BEARISH","score":48,"price":7.900000095367432,"strike":6.0,"contract_type":"PUT","est_cost":0.14,"rel_vol":0.6,"atr_pct":0.61,"rsi":77,"pushed":false}
 {"scanner":"live","ts":"2026-08-17T14:43:09+00:00","date":"2026-08-17","ticker":"GRAB","trend":"BULLISH","score":40,"price":3.6050000190734863,"strike":5.5,"contract_type":"CALL","est_cost":0.06,"rel_vol":0.5,"atr_pct":0.34,"rsi":24,"pushed":false}
 {"scanner":"live","ts":"2026-08-17T14:43:12+00:00","date":"2026-08-17","ticker":"ENVX","trend":"BULLISH","score":40,"price":3.674999952316284,"strike":5.5,"contract_type":"CALL","est_cost":0.09,"rel_vol":1.2,"atr_pct":1.65,"rsi":26,"pushed":false}
+{"scanner":"chatty","ts":"2026-08-17T14:54:55+00:00","date":"2026-08-17","ticker":"JBLU","trend":"bearish","score":85,"price":5.65,"strike":7.5,"contract_type":"CALL","est_cost":0.21,"rel_vol":0.5,"atr_pct":4.6,"pushed":true}

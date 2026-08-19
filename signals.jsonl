@@ -1127,3 +1127,5 @@
 {"scanner":"live","ts":"2026-08-19T14:53:08+00:00","date":"2026-08-19","ticker":"BBD","trend":"BULLISH","score":40,"price":3.0950000286102295,"strike":5.0,"contract_type":"CALL","est_cost":0.05,"rel_vol":0.6,"atr_pct":0.44,"rsi":25,"pushed":false}
 {"scanner":"chatty","ts":"2026-08-19T15:03:00+00:00","date":"2026-08-19","ticker":"F","trend":"neutral_dip","score":70,"price":13.93,"strike":18.0,"contract_type":"CALL","est_cost":0.38,"rel_vol":0.6,"atr_pct":2.5,"pushed":true}
 {"scanner":"chatty","ts":"2026-08-19T15:03:02+00:00","date":"2026-08-19","ticker":"IWM","trend":"neutral_dip","score":65,"price":300.23,"strike":304.0,"contract_type":"CALL","est_cost":5.7,"rel_vol":1.1,"atr_pct":0.8,"pushed":true}
+{"scanner":"chatty","ts":"2026-08-19T15:25:01+00:00","date":"2026-08-19","ticker":"F","trend":"neutral_dip","score":70,"price":13.93,"strike":18.0,"contract_type":"CALL","est_cost":0.38,"rel_vol":0.6,"atr_pct":2.5,"pushed":true}
+{"scanner":"chatty","ts":"2026-08-19T15:25:02+00:00","date":"2026-08-19","ticker":"IWM","trend":"neutral_dip","score":65,"price":300.23,"strike":304.0,"contract_type":"CALL","est_cost":5.7,"rel_vol":1.1,"atr_pct":0.8,"pushed":true}

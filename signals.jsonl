@@ -1177,3 +1177,4 @@
 {"scanner":"live","ts":"2026-08-20T14:54:26+00:00","date":"2026-08-20","ticker":"ENVX","trend":"BULLISH","score":33,"price":3.2953999042510986,"strike":5.5,"contract_type":"CALL","est_cost":0.06,"rel_vol":0.4,"atr_pct":0.85,"rsi":44,"pushed":false}
 {"scanner":"live","ts":"2026-08-20T14:54:29+00:00","date":"2026-08-20","ticker":"VALE","trend":"BEARISH","score":55,"price":14.125,"strike":10.0,"contract_type":"PUT","est_cost":0.24,"rel_vol":0.9,"atr_pct":0.36,"rsi":76,"pushed":false}
 {"scanner":"chatty","ts":"2026-08-20T15:05:54+00:00","date":"2026-08-20","ticker":"IWM","trend":"neutral_dip","score":60,"price":301.72,"strike":306.0,"contract_type":"CALL","est_cost":5.88,"rel_vol":0.9,"atr_pct":0.9,"pushed":true}
+{"scanner":"chatty","ts":"2026-08-20T15:27:40+00:00","date":"2026-08-20","ticker":"IWM","trend":"neutral_dip","score":60,"price":301.72,"strike":306.0,"contract_type":"CALL","est_cost":5.88,"rel_vol":0.9,"atr_pct":0.9,"pushed":true}

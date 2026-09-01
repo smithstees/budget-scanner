@@ -3,8 +3,6 @@ name: Wheel / CSP Scanner
 # On-demand + weekly (Sunday night, so you have ideas Monday morning)
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 1 * * 1'  # 1:00 UTC Monday = 9pm ET Sunday
 
 permissions:
   contents: write

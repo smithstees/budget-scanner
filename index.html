@@ -290,7 +290,7 @@
 <div class="status" id="status">Ready. Watchlist: <span id="tickerCount">0</span> tickers.</div>
 <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
-<main>
+<main><div class="info-box"><strong>Research mode:</strong> Browser signals use delayed stock data and estimated premiums. They do not verify option liquidity, earnings, or profitable performance. Verify exact contracts; no trades are placed.</div>
   <!-- Trades tab content -->
   <div id="tradesView" style="display:none;">
     <div class="tl-hero">
@@ -298,8 +298,11 @@
       <button class="tl-btn tl-sell" onclick="TL_openSell()">↓ I SOLD IT</button>
     </div>
     <div id="tlSummary" class="tl-summary" style="display:none;"></div>
+    <label>Show results: <select id="tlStatsMode" onchange="TL_renderTrades()"><option value="actual">Actual (manually entered)</option><option value="paper">Paper practice</option><option value="unverified">Legacy / unverified</option></select></label>
+    <button onclick="TradeLogger.download()">Export full journal</button>
+    <p>Net realized P&amp;L after entered fees. Open-position losses are not included. Legacy trades remain unverified. Back up before deleting.</p>
     <div id="tlRows"></div>
-    <div class="disclaim" style="padding:16px 0;">Trades auto-log to Google Sheets if you've set your Web App URL in Settings.</div>
+    <div class="disclaim" style="padding:16px 0;">Journal is stored in this browser. Optional Sheets delivery is best effort; export backups.</div>
   </div>
 
   <!-- Settings tab content -->
@@ -309,7 +312,7 @@
       <label class="tl-set-label">Apps Script Web App URL</label>
       <input type="text" id="tlWebAppInput" class="tl-set-input" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"/>
       <button class="tl-set-btn" onclick="TL_saveWebApp()">SAVE WEB APP URL</button>
-      <div id="tlWebAppOk" class="tl-set-ok">✓ Sheets sync active — trades will auto-log</div>
+      <div id="tlWebAppOk" class="tl-set-ok">Sheets endpoint configured; delivery is not verified</div>
       <div class="tl-set-hint">
         <strong style="color:#cbd5e1;">One-time setup:</strong><br>
         1. Open your <a href="https://drive.google.com/drive/search?q=Trade%20Log" target="_blank">Trade Log sheet</a> in Drive<br>
@@ -324,16 +327,16 @@
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var data = JSON.parse(e.postData.contents);
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['Date','Ticker','Direction','Entry $/share','Exit $/share',
-      'Entry $','Exit $','$ P&L','% Gain','Result','Notes']);
+    sheet.appendRow(['Event','Trade ID','Mode','Date','Ticker','Direction',
+      'Quantity','Remaining','Strike','Expiry','Entry price','Exit price',
+      'Entry fees','Entry cost','Exit value','Net realized P&amp;L','Result']);
   }
-  sheet.appendRow([
-    data.date, data.ticker, data.direction,
-    data.entryPrice, data.exitPrice || '',
-    data.entryCost || '', data.exitValue || '',
-    data.pnl || '', data.pctGain || '',
-    data.result || 'OPEN', data.notes || ''
-  ]);
+  function value(x) { return x == null ? '' : x; }
+  sheet.appendRow([data.event, data.id, data.mode || 'unverified', data.date,
+    data.ticker, data.direction, value(data.quantity), value(data.remainingQuantity),
+    value(data.strike), value(data.expiry), value(data.entryPrice), value(data.exitPrice),
+    value(data.entryFees), value(data.entryCost), value(data.exitValue), value(data.pnl),
+    data.result || 'OPEN']);
   return ContentService.createTextOutput(JSON.stringify({ok:true}))
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -348,13 +351,13 @@ function doGet(e) {
   <div id="results">
     <div class="info-box">
       <div class="head">📖 Runway Options Strategy</div>
-      Buy CALLs/PUTs <strong>30–45 days out</strong>, <strong>3–5 strikes OTM</strong>. Less theta bleed, better win-rate math.
+      Buy CALLs/PUTs <strong>30–45 days out</strong>, <strong>3–5 strikes OTM</strong>. Research hypothesis; no validated win probability.
       <br><br>
-      <strong>Exit rule:</strong> Sell when stock is ~65% of the way to your strike (usually +80–200% gain).
+      <strong>Exit rule:</strong> Sell when stock is ~65% of the way to your strike (does not imply a particular option return).
       <br>
-      <strong>Take HALF off at +50%</strong> — lock the win, let the rest ride free.
+      <strong>Take HALF off at +50%</strong> — requires at least two contracts; remaining contracts still carry risk.
       <br><br>
-      <strong>Stop:</strong> −60% on the contract, no exceptions.
+      <strong>Stop:</strong> −60% on the contract, a stop cannot guarantee its execution price.
     </div>
     <div class="empty">
       <div style="font-size: 42px;">📱</div>
@@ -721,7 +724,7 @@ function renderOptionCard(s) {
           <div class="ticker">${s.ticker}</div>
           <div class="price">$${s.price.toFixed(2)} <span class="${chgCls}">${chgSign}${s.changePct.toFixed(2)}%</span></div>
         </div>
-        <span class="badge ${badgeCls}">${s.contractType} · ${s.tier} ${s.score}%</span>
+        <span class="badge ${badgeCls}">${s.contractType} · ${s.tier} score ${s.score}/100</span>
       </div>
 
       <div class="score-row">
@@ -740,7 +743,7 @@ function renderOptionCard(s) {
           <strong>SELL when stock hits ~$${s.sellZone.toFixed(2)}</strong> (typically +80–200% gain)
         </div>
         <div style="margin-top:4px; color:#7d8ba0; font-size:11.5px;">
-          💡 Take HALF off at +50% · <span class="warn">Stop: −60%</span>
+          💡 Partial exits require 2+ contracts; +50% is a research target · <span class="warn">Stop: −60%</span>
         </div>
       </div>
     </div>`;
@@ -767,7 +770,7 @@ function renderWheelCard(s) {
             <span class="${s.chg5 < 0 ? 'change-dn' : 'change-up'}">${s.chg5 > 0 ? '+' : ''}${s.chg5}% 5d</span>${supportTag}
           </div>
         </div>
-        <span class="badge wheel">CSP · ${s.tier} ${s.score}%</span>
+        <span class="badge wheel">CSP · ${s.tier} score ${s.score}/100</span>
       </div>
 
       <div class="score-row">
@@ -877,13 +880,13 @@ document.querySelectorAll('.tab').forEach(el => {
         res.innerHTML = `
           <div class="info-box">
             <div class="head">📖 Runway Options Strategy</div>
-            Buy CALLs/PUTs <strong>30–45 days out</strong>, <strong>3–5 strikes OTM</strong>. Less theta bleed, better win-rate math.
+            Buy CALLs/PUTs <strong>30–45 days out</strong>, <strong>3–5 strikes OTM</strong>. Research hypothesis; no validated win probability.
             <br><br>
-            <strong>Exit rule:</strong> Sell when stock is ~65% of the way to your strike (usually +80–200% gain).
+            <strong>Exit rule:</strong> Sell when stock is ~65% of the way to your strike (does not imply a particular option return).
             <br>
-            <strong>Take HALF off at +50%</strong> — lock the win, let the rest ride free.
+            <strong>Take HALF off at +50%</strong> — requires at least two contracts; remaining contracts still carry risk.
             <br><br>
-            <strong>Stop:</strong> −60% on the contract, no exceptions.
+            <strong>Stop:</strong> −60% on the contract, a stop cannot guarantee its execution price.
           </div>
           <div class="empty">
             <div style="font-size: 42px;">📱</div>
@@ -923,6 +926,16 @@ $('scanBtn').addEventListener('click', runScan);
     <input type="text" id="tlTickerField" class="tl-input ticker" placeholder="TICKER" maxlength="8" autocorrect="off" autocapitalize="characters" spellcheck="false" style="display:none;"/>
     <select id="tlOpenSelect" class="tl-input" style="display:none;font-size:14px;text-align:left;"></select>
     <input type="number" id="tlPriceField" class="tl-input" placeholder="0.00" inputmode="decimal" step="0.01" style="display:none;"/>
+    <div id="tlDetails" style="display:none;">
+      <label>Record type <select id="tlMode"><option value="paper">Paper practice</option><option value="actual">Actual fill</option></select></label>
+      <label>Instrument <select id="tlDirection"><option>CALL</option><option>PUT</option><option>STOCK</option></select></label>
+      <label>Strike (options) <input id="tlStrike" type="number" min="0" step="0.01"></label>
+      <label>Expiry (options) <input id="tlExpiry" type="date"></label>
+      <label>Strategy <input id="tlStrategy" placeholder="nightly / live / chatty / manual"></label>
+      <label>Quantity this fill <input id="tlQuantity" type="number" min="1" step="1" value="1"></label>
+      <label>Total fees this fill ($) <input id="tlFees" type="number" min="0" step="0.01" value="0"></label>
+      <p>Exit price 0 records expiry / total loss. Actual fills are entered manually; no brokerage connection.</p>
+    </div>
     <div class="tl-modal-actions">
       <button class="tl-cancel-btn" onclick="TL_closeModal()">Cancel</button>
       <button class="tl-confirm-btn" id="tlConfirmBtn" onclick="TL_confirm()">Continue</button>
@@ -931,7 +944,7 @@ $('scanBtn').addEventListener('click', runScan);
 </div>
 <div class="tl-toast" id="tlToast"></div>
 
-<script src="trade_logger.js"></script>
+<script src="trade_logger.js?v=2"></script>
 <script>
 // ── Trade Logger controller ────────────────────────────────────────────────────
 var TL_step = null; // { action:'buy'|'sell', stage:'ticker'|'select'|'price', ticker:'', tradeId:'' }
@@ -980,6 +993,10 @@ function TL_openSell() {
 }
 
 function TL_showPricePrompt(trade) {
+  document.getElementById('tlDetails').style.display = 'block';
+  ['tlMode','tlDirection','tlStrike','tlExpiry','tlStrategy'].forEach(function(id){document.getElementById(id).disabled = TL_step.action !== 'buy';});
+  document.getElementById('tlQuantity').value = trade ? (trade.remainingQuantity == null ? 1 : trade.remainingQuantity) : 1;
+  document.getElementById('tlFees').value = 0;
   document.getElementById('tlModalTitle').textContent = TL_step.action === 'buy' ? 'Entry price' : 'Exit price';
   var sub;
   if (TL_step.action === 'buy') {
@@ -1018,13 +1035,21 @@ function TL_confirm() {
   }
   // price stage — save the trade
   var price = parseFloat(document.getElementById('tlPriceField').value);
-  if (!price || price <= 0) { TL_toast('Enter a valid price', true); return; }
+  if (!Number.isFinite(price) || price < 0 || (TL_step.action === 'buy' && price === 0)) { TL_toast('Enter a valid price', true); return; }
   if (TL_step.action === 'buy') {
-    var t = TradeLogger.logBuy(TL_step.ticker, price);
+    var t = TradeLogger.logBuy(TL_step.ticker, price, {
+      mode:document.getElementById('tlMode').value,
+      direction:document.getElementById('tlDirection').value,
+      quantity:Number(document.getElementById('tlQuantity').value),
+      fees:Number(document.getElementById('tlFees').value),
+      strike:Number(document.getElementById('tlStrike').value) || null,
+      expiry:document.getElementById('tlExpiry').value || null,
+      strategy:document.getElementById('tlStrategy').value || 'manual'
+    });
     if (!t) { TL_toast('Could not log trade', true); return; }
     TL_toast('✓ ' + t.ticker + ' buy logged at $' + price.toFixed(2));
   } else {
-    var t = TradeLogger.logSell(TL_step.tradeId, price);
+    var t = TradeLogger.logSell(TL_step.tradeId, price, {quantity:Number(document.getElementById('tlQuantity').value), fees:Number(document.getElementById('tlFees').value)});
     if (!t) { TL_toast('Could not log sell', true); return; }
     var emoji = t.pctGain >= 50 ? '🎯' : t.pctGain > 0 ? '✓' : '✗';
     TL_toast(emoji + ' ' + t.ticker + ' closed ' + (t.pctGain > 0 ? '+' : '') + t.pctGain + '% (' + (t.pnl >= 0 ? '+$' : '−$') + Math.abs(t.pnl).toFixed(2) + ')');
@@ -1035,6 +1060,7 @@ function TL_confirm() {
 
 function TL_closeModal() {
   document.getElementById('tlModal').classList.remove('show');
+  document.getElementById('tlDetails').style.display = 'none';
   TL_step = null;
 }
 
@@ -1054,11 +1080,11 @@ function TL_deleteTrade(id) {
 
 function TL_renderTrades() {
   var trades = TradeLogger.getTrades();
-  var stats  = TradeLogger.stats();
+  var stats  = TradeLogger.stats(document.getElementById('tlStatsMode').value);
 
   // badge on tab
   var b = document.getElementById('tradesTabBadge');
-  if (stats.open > 0) { b.textContent = stats.open; b.style.display = 'inline-block'; }
+  if (stats.allOpen > 0) { b.textContent = stats.allOpen; b.style.display = 'inline-block'; }
   else                { b.style.display = 'none'; }
 
   var sb = document.getElementById('tlSummary');
@@ -1079,7 +1105,7 @@ function TL_renderTrades() {
     return;
   }
   rows.innerHTML = trades.map(function(t) {
-    var isOpen = !t.exitPrice;
+    var isOpen = t.remainingQuantity == null ? t.exitPrice == null : t.remainingQuantity > 0;
     var tagCls, tagTxt, pnlHtml;
     if (isOpen) {
       tagCls = 'tl-tag-open'; tagTxt = 'OPEN';
@@ -1094,14 +1120,14 @@ function TL_renderTrades() {
     }
     return '<div class="tl-row' + (isOpen ? ' open' : '') + '">' +
       '<div class="tl-row-head">' +
-        '<span class="tl-row-ticker">' + t.ticker + '</span>' +
+        '<span class="tl-row-ticker">' + t.ticker + ' · ' + (t.mode || 'unverified') + ' · ' + (t.direction || 'unknown') + '</span>' +
         '<span class="tl-row-tag ' + tagCls + '">' + tagTxt + '</span>' +
         '<span class="tl-row-date">' + t.date + '</span>' +
       '</div>' +
       '<div class="tl-row-body">' +
         'Entry: <span class="ev">$' + t.entryPrice.toFixed(2) + '/share</span>' +
         ' · Cost: <span class="ev">$' + (t.entryCost || (t.entryPrice * 100)).toFixed(2) + '</span>' +
-        (t.exitPrice ? ' · Exit: <span class="ev">$' + t.exitPrice.toFixed(2) + '/share</span>' : '') +
+        (t.exitPrice != null ? ' · Exit: <span class="ev">$' + t.exitPrice.toFixed(2) + '/share</span>' : '') +
       '</div>' +
       '<div class="tl-row-foot">' +
         pnlHtml +
@@ -1118,7 +1144,7 @@ function TL_saveWebApp() {
   var ok = TradeLogger.setWebAppUrl(v);
   if (!ok) { TL_toast('Paste the full https://... URL', true); return; }
   document.getElementById('tlWebAppOk').classList.toggle('show', !!v);
-  TL_toast(v ? '✓ Sheets sync active' : 'Sheets sync cleared');
+  TL_toast(v ? 'Sheets endpoint configured' : 'Sheets sync cleared');
 }
 
 function TL_initSettings() {
@@ -1180,3 +1206,4 @@ TL_renderTrades();
 
 </body>
 </html>
+

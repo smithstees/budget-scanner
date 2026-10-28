@@ -455,16 +455,20 @@ async function checkTicker() {
     // Green flags
     const trendMatch = (direction === 'call' && trend === 'bullish') || (direction === 'put' && trend === 'bearish');
     const goodVol    = relVol >= 1.0;
-    const goodOI     = !oi || oi >= 100;
-    const goodIV     = !iv || iv <= 60;
-    const goodSpread = !spreadPct || spreadPct <= 40;
+    const goodOI     = Number.isFinite(oi) && oi >= 100;
+    const goodIV     = Number.isFinite(iv) && iv > 0 && iv <= 60;
+    const goodSpread = Number.isFinite(spreadPct) && spreadPct > 0 && spreadPct <= 15;
     const goodPrice  = price <= 15;
-    const goodAsk    = !ask || ask <= 0.20;
+    const goodAsk    = Number.isFinite(ask) && ask > 0 && ask <= 0.20;
 
     if (trendMatch)  reasons.push('3-candle trend confirmed');
     if (goodVol)     reasons.push(`volume ${relVol.toFixed(1)}x average`);
     if (goodOI && oi)reasons.push(`open interest ${oi}`);
 
+    if (!goodAsk) warnings.push('missing or over-budget ask');
+    if (!goodOI) warnings.push('missing or insufficient open interest');
+    if (!goodSpread) warnings.push('missing or wide spread');
+    if (!goodIV) warnings.push('missing or high implied volatility');
     if (!trendMatch) warnings.push('candles do not confirm this direction');
     if (!goodVol)    warnings.push(`low volume (${relVol.toFixed(1)}x avg)`);
     if (!goodIV && iv) warnings.push(`IV ${iv}% is high — options expensive`);
@@ -474,7 +478,7 @@ async function checkTicker() {
 
     const greenCount = [trendMatch, goodVol, goodOI, goodIV, goodSpread, goodPrice, goodAsk].filter(Boolean).length;
 
-    if (greenCount >= 5 && trendMatch && warnings.length === 0) {
+    if (greenCount >= 5 && trendMatch && goodAsk && goodSpread && goodOI && warnings.length === 0) {
       verdict = 'enter';
     } else if (greenCount >= 3 && trendMatch) {
       verdict = 'caution';
@@ -483,14 +487,14 @@ async function checkTicker() {
     }
 
     const verdictLabels = {
-      enter:   { icon: '✓', label: 'ENTER', reason: reasons.join(' · ') || 'Setup looks clean' },
+      enter:   { icon: '✓', label: 'RESEARCH CANDIDATE', reason: reasons.join(' · ') || 'Setup looks clean' },
       caution: { icon: '~', label: 'CAUTION', reason: warnings.slice(0,2).join(' · ') || 'Some filters not met' },
       skip:    { icon: '✗', label: 'SKIP', reason: warnings.slice(0,2).join(' · ') || 'Setup not confirmed' }
     };
     const v = verdictLabels[verdict];
 
     // ── PROFIT CALC ──
-    const contracts = ask ? Math.floor(20 / (ask * 100)) || 1 : 1;
+    const contracts = ask > 0 ? Math.max(0, Math.floor(20 / (ask * 100))) : 0;
     const cost      = ask ? (contracts * ask * 100) : 20;
     const target50  = cost * 1.5;
     const stop50    = cost * 0.5;
@@ -661,7 +665,7 @@ function recalc() {
   const budget    = parseFloat(document.getElementById('budgetInput')?.value) || 20;
   const askPerShare = parseFloat(document.getElementById('askInput')?.value) || 0.15;
   const costPer   = askPerShare * 100;
-  const contracts = Math.max(1, Math.floor(budget / costPer));
+  const contracts = costPer > 0 && budget > 0 ? Math.max(0, Math.floor(budget / costPer)) : 0;
   const totalCost = contracts * costPer;
   const target    = totalCost * 1.5;
   const stop      = totalCost * 0.5;
@@ -732,3 +736,4 @@ function toast(msg) {
 </script>
 </body>
 </html>
+

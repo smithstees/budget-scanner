@@ -26,6 +26,7 @@ process incrementally, safe to commit to git.
 """
 from __future__ import annotations
 import json
+import hashlib
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -36,19 +37,8 @@ LOG_PATH = Path(__file__).resolve().parent / "signals.jsonl"
 
 
 def _et_date_str() -> str:
-    """Format today's date in Eastern time (roughly — GH runners are UTC)."""
-    # Simple offset: UTC - 4h for EDT, UTC - 5h for EST.
-    # For a log record, 'roughly today' is good enough.
-    utc_now = datetime.now(timezone.utc)
-    et_hour = (utc_now.hour - 4) % 24
-    # If subtracting 4 crossed midnight backwards, roll date back one day
-    if utc_now.hour < 4:
-        # It's still yesterday in ET
-        from datetime import timedelta
-        et_date = (utc_now - timedelta(days=1)).strftime("%Y-%m-%d")
-    else:
-        et_date = utc_now.strftime("%Y-%m-%d")
-    return et_date
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo('America/New_York')).date().isoformat()
 
 
 def log_signal(scanner: str, sig: dict[str, Any], pushed: bool = False) -> None:
@@ -76,6 +66,15 @@ def log_signal(scanner: str, sig: dict[str, Any], pushed: bool = False) -> None:
             "rsi": sig.get("rsi"),
             "pushed": bool(pushed),
         }
+        for key in ('expiry', 'entry_bid', 'entry_ask', 'contract_verified',
+                    'quality_blocks', 'real_strike', 'real_expiry', 'real_delta',
+                    'real_iv', 'real_oi', 'real_spread_pct', 'realized_vol_rank',
+                    'evaluation_mode', 'candle_trend'):
+            if key in sig:
+                row[key] = sig[key]
+        row['schema_version'] = 2
+        row['signal_id'] = hashlib.sha256('|'.join(str(row.get(k, '')) for k in
+            ('scanner', 'ts', 'ticker', 'contract_type', 'strike')).encode()).hexdigest()[:24]
         # Strip None values to keep the log small
         row = {k: v for k, v in row.items() if v is not None}
 
@@ -103,3 +102,4 @@ def read_signals() -> list[dict[str, Any]]:
             except json.JSONDecodeError:
                 continue
     return out
+

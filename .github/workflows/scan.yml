@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+concurrency:
+  group: scanner-data-writes
+  cancel-in-progress: false
+
 permissions:
   contents: write
 jobs:
@@ -35,6 +39,7 @@ jobs:
             git add signals.jsonl
             git commit -m 'chore: append nightly scanner signals [skip ci]'
             # Retry once on push conflict
-            git pull --rebase origin main || true
+            git pull --rebase origin main
             git push
           fi
+

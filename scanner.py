@@ -236,7 +236,7 @@ def analyze(ticker):
 def push_signal(sig):
     direction = 'CALL' if sig['trend'] == 'BULLISH' else 'PUT'
     vol_tag = 'HIGH VOL' if sig['rel_vol'] >= 2.0 else 'vol+' if sig['rel_vol'] >= 1.5 else ''
-    title = f"[{direction}] {sig['ticker']} - {sig['tier']} {sig['score']}% {vol_tag}"
+    title = f"[{direction}] {sig['ticker']} - {sig['tier']} score {sig['score']}/100 {vol_tag}"
 
     # Prefer real chain data when available, fall back to ATR estimate
     if sig.get('real_strike'):
@@ -330,72 +330,11 @@ def push_summary(signals, pushed_count):
     except: pass
 
 def enrich_and_filter(sig, regime, verbose=True):
-    """
-    Enrich a raw signal with quality data (IV rank, earnings, real strike,
-    liquidity) and decide whether it should still be pushed given quality
-    filters + SPY regime.
-
-    Returns (sig, should_push_ok, reasons_blocked_list).
-
-    In strict mode (config.QUALITY_STRICT), any block reason → no push.
-    In loose mode, reasons are logged into the signal but push proceeds.
-    """
-    reasons = []
     if sq is None:
-        return sig, True, reasons
-
-    ticker = sig['ticker']
-
-    # IV Rank ceiling (skip long premium when IV is elevated)
-    ivr = sq.iv_rank(ticker)
-    if ivr is not None:
-        sig['iv_rank'] = ivr
-        if ivr > config.IV_RANK_CEILING:
-            reasons.append(f"IV Rank {ivr} > {config.IV_RANK_CEILING} (long options expensive)")
-
-    # Earnings blackout
-    earnings_soon = sq.has_earnings_within(ticker, config.EARNINGS_BLACKOUT_DAYS)
-    if earnings_soon is True:
-        sig['earnings_within_14d'] = True
-        reasons.append(f"Earnings within {config.EARNINGS_BLACKOUT_DAYS}d (IV crush risk)")
-
-    # Real delta strike from Nasdaq chain
-    direction = sig.get('trend', 'BULLISH')
-    # Target ~35 days out (middle of 30-45 window)
-    real = sq.target_delta_strike(ticker, sig['price'], 35, direction)
-    if real:
-        sig['real_strike']       = real['strike']
-        sig['real_expiry']       = real['expiry']
-        sig['real_tte_days']     = real['tte_days']
-        sig['real_delta']        = real['delta']
-        sig['real_iv']           = real['iv']
-        sig['real_mid']          = real['mid']
-        sig['real_bid']          = real['bid']
-        sig['real_ask']          = real['ask']
-        sig['real_oi']           = real['oi']
-        sig['real_spread_pct']   = real['spread_pct']
-        sig['real_est_contract'] = round(real['mid'] * 100)
-        # Liquidity check
-        if not sq.is_liquid(real):
-            reasons.append(
-                f"Illiquid: OI={real['oi']} spread={int(real['spread_pct']*100)}%"
-            )
-    else:
-        reasons.append("No delta-0.25–0.35 strike found in chain")
-
-    # SPY regime bias
-    if regime == 'BEARISH' and direction == 'BULLISH' and sig.get('score', 0) < 65:
-        reasons.append("SPY < 200d SMA; CALL below high-conviction score cutoff")
-    elif regime == 'BULLISH' and direction == 'BEARISH' and sig.get('score', 0) < 65:
-        reasons.append("SPY > 200d SMA; PUT below high-conviction score cutoff")
-
-    sig['quality_blocks'] = reasons
-    ok = (not reasons) if config.QUALITY_STRICT else True
-
-    if verbose and reasons:
-        for r in reasons:
-            print(f"  [quality]  {r}")
-    return sig, ok, reasons
+        sig['contract_verified'] = False
+        sig['quality_blocks'] = ['Quality module unavailable']
+        return sig, False, sig['quality_blocks']
+    return sq.evaluate_long_signal(sig, regime)
 
 
 def main():
@@ -407,13 +346,13 @@ def main():
         regime = sq.spy_regime()
         det = sq.spy_details()
         print(f"SPY regime: {regime}  (last={det.get('last')}, 200d SMA={det.get('sma')})")
-        print(f"Quality filters: IV≤{config.IV_RANK_CEILING} | earnings blackout {config.EARNINGS_BLACKOUT_DAYS}d | "
+        print(f"Quality filters: realized-vol rank≤{config.IV_RANK_CEILING} | earnings blackout {config.EARNINGS_BLACKOUT_DAYS}d | "
               f"OI≥{config.MIN_OPEN_INTEREST} | spread≤{int(config.MAX_SPREAD_PCT_OF_MID*100)}% | "
               f"delta {config.TARGET_DELTA_MIN}–{config.TARGET_DELTA_MAX} | "
               f"strict={config.QUALITY_STRICT}")
     else:
         regime = 'NEUTRAL'
-        print("Quality module unavailable (running unfiltered)")
+        print("Quality module unavailable (alerts blocked)")
     print(f"{'='*50}\n")
 
     if not API_KEY:
@@ -488,3 +427,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

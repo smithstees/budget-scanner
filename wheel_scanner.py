@@ -22,7 +22,7 @@ Pushes to ntfy.sh topic: ragebudgetopt
 """
 
 import os, time, math, json, urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 def _ascii(s):
     # ntfy Title header must be latin-1 safe. Strip fancy unicode.
@@ -36,6 +36,7 @@ try:
     NTFY_TOPIC = config.NTFY_TOPIC
 except Exception:
     NTFY_TOPIC = os.environ.get('NTFY_TOPIC', 'ragebudgetopt')
+import scanner_quality as sq
 YAHOO_URL  = 'https://query1.finance.yahoo.com/v8/finance/chart/'
 
 # Stocks that make reasonable wheel candidates: sub-$10 (so 100 shares
@@ -152,27 +153,27 @@ def analyze(ticker):
     daily_vol = math.sqrt(variance)
     annual_vol = daily_vol * math.sqrt(252)  # rough IV proxy
 
-    # Recommended put strike: 5-10% OTM, snapping to strike ladder
-    # $0.50 steps under $10, $1 steps at $10+
-    step = 0.50 if price < 10 else 1.00
-    target_strike = math.floor((price * 0.93) / step) * step
-    if target_strike < MIN_PRICE:
+    # A premium is sale proceeds, not profit. Use a quoted put BID, never
+    # a volatility-based estimate, and require acceptable liquidity.
+    if sq.has_earnings_within(ticker, config.EARNINGS_BLACKOUT_DAYS) is not False:
         return None
-
-    # Rough premium estimate for a 30-day put ~7% OTM using annual vol
-    # This is a very crude Black-Scholes-lite approximation
-    otm_pct = (price - target_strike) / price
-    # Premium as % of strike, using time-scaled vol
-    days = 30
-    t = days / 365
-    # Expected premium ~ strike * annual_vol * sqrt(t) * exp(-otm_pct * factor)
-    prem_pct = annual_vol * math.sqrt(t) * math.exp(-otm_pct * 5) * 0.4
-    prem_pct = max(0.005, min(0.10, prem_pct))  # sanity clamp: 0.5%-10% of strike
-    premium_per_share = round(target_strike * prem_pct, 2)
-    premium_contract = round(premium_per_share * 100)
+    chain = sq._fetch_nasdaq_chain(ticker, 35) or []
+    today = datetime.now(timezone.utc).date()
+    eligible = []
+    for opt in chain:
+        days = (datetime.strptime(opt['expiry'], '%Y-%m-%d').date() - today).days
+        mid = (opt['bid'] + opt['ask']) / 2
+        entry = dict(opt, spread_pct=(opt['ask']-opt['bid'])/mid if mid > 0 else 1)
+        if (not opt['is_call'] and 30 <= days <= 45 and 0 < opt['strike'] < price
+                and opt['strike'] * 100 <= MAX_COLLATERAL and sq.is_liquid(entry)):
+            eligible.append((abs(opt['strike'] / price - .93), opt, days))
+    if not eligible:
+        return None
+    _, contract, days = min(eligible, key=lambda x: x[0])
+    target_strike = contract['strike']
+    premium_per_share = contract['bid']
+    premium_contract = round(premium_per_share * 100, 2)
     collateral = round(target_strike * 100, 2)
-
-    # Annualized yield on collateral
     annual_yield = (premium_per_share / target_strike) * (365 / days)
 
     if annual_yield < MIN_ANNUAL_YIELD:
@@ -207,6 +208,10 @@ def analyze(ticker):
         'near_support': near_support,
         'strike': round(target_strike, 2),
         'premium_share': premium_per_share,
+        'expiry': contract['expiry'],
+        'entry_bid': contract['bid'],
+        'entry_ask': contract['ask'],
+        'evaluation_mode': 'research',
         'premium_contract': premium_contract,
         'collateral': collateral,
         'annual_vol_pct': round(annual_vol * 100),
@@ -285,8 +290,8 @@ def main():
         lines.append(
             f"{marker} {r['ticker']}  ${r['price']:.2f}  ({r['chg_5d']:+.1f}% 5d)\n"
             f"  Sell {r['days']}d PUT strike ${r['strike']:.2f}\n"
-            f"  Collect ~${r['premium_contract']} · Collateral ${r['collateral']:.0f}\n"
-            f"  Yield: {r['annual_yield']*100:.0f}% annualized · Score {r['score']}"
+            f"  Quoted premium ~${r['premium_contract']} · Collateral ${r['collateral']:.0f}\n"
+            f"  Annualized premium/collateral (not return): {r['annual_yield']*100:.0f}% annualized · Score {r['score']}"
         )
     body = (
         "Cash-Secured Put ideas (pick ONE):\n\n" +
@@ -301,7 +306,7 @@ def main():
         "✓ Stock stays above strike → keep premium, put expires worthless\n"
         "✓ Stock drops below strike → you're assigned 100 shares at strike\n"
         "  (which is below today's price · net cost even lower with premium)\n\n"
-        "Only do this on stocks you'd HAPPILY own for weeks."
+        "Research only. Assignment can create large stock losses; collected premium is not profit."
     )
 
     strong = [r for r in results if r['tier'] == 'STRONG']
@@ -315,3 +320,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

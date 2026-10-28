@@ -10,7 +10,7 @@ Environment variable overrides (all optional):
     NOTIFY_MIN_SCORE    — override push threshold (int)
     STOCK_PRICE_MIN     — override lower price band ($)
     STOCK_PRICE_MAX     — override upper price band ($)
-    QUALITY_STRICT      — 1 to enforce all quality filters; 0 to log-only
+    Quality eligibility is enforced; unknown data does not bypass checks.
 """
 from __future__ import annotations
 import os
@@ -42,7 +42,7 @@ POLYGON_DELAY_SEC = 13  # free tier: ~5 calls/min
 # ── Quality-filter behavior ────────────────────────────────────────
 # strict: signal fails if a filter fails
 # loose:  signal keeps score but downgraded / annotated
-QUALITY_STRICT = os.environ.get("QUALITY_STRICT", "1") == "1"
+QUALITY_STRICT = True  # Missing contract/earnings data must never generate an alert.
 
 # IV Rank: >60 = elevated. Skip long-premium ideas above this.
 IV_RANK_CEILING = 60.0
@@ -125,3 +125,4 @@ TICKER_SECTOR: dict[str, str] = {t: s for t, s in WATCHLIST}
 
 def sector_of(ticker: str) -> str:
     return TICKER_SECTOR.get(ticker.upper(), "misc")
+

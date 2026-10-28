@@ -1,0 +1,54 @@
+{
+  "trial_id": "budget-options-50-v1",
+  "paper_only": true,
+  "as_of": "2026-10-28T15:32:22.970883+00:00",
+  "status": "collecting",
+  "rules": {
+    "target_signals": 50,
+    "starting_cash": 200.0,
+    "max_entry_cost": 30.0,
+    "max_open_positions": 3,
+    "contracts_per_trade": 1,
+    "fee_per_side": 0.65,
+    "slippage_per_share": 0.01,
+    "target_multiplier": 1.5,
+    "stop_multiplier": 0.4,
+    "max_holding_days": 7,
+    "realized_loss_stop": 60.0,
+    "maximum_calendar_days": 60,
+    "minimum_score": 65,
+    "data_delay_warning": "Public data may be delayed; hourly observations miss intrahour stops",
+    "selection": "Existing live mean-reversion score >=65; exact long CALL/PUT contracts; existing quality filters unchanged"
+  },
+  "qualifying_signals": 0,
+  "target_signals": 50,
+  "outcomes": {},
+  "closed_trades": 0,
+  "wins": 0,
+  "net_realized_paper_pnl": null,
+  "simulated_cash": 200.0,
+  "current_observed_equity": 200.0,
+  "max_observed_drawdown": 0.0,
+  "stop_reason": null,
+  "skipped_reasons": {},
+  "descriptive_by_direction": {},
+  "diagnostics": {
+    "stocks_checked": 41,
+    "stock_data_missing": 21,
+    "quality_rejections": {
+      "Earnings calendar unavailable": 1,
+      "Realized-volatility data unavailable": 1,
+      "No quoted, liquid contract within expiry, delta and ASK budget limits": 1,
+      "Market regime unavailable or neutral": 1
+    },
+    "eligible_this_run": 0
+  },
+  "conclusion": "INSUFFICIENT_EVIDENCE",
+  "limitations": [
+    "No actual money or orders",
+    "Observed quotes are not guaranteed fills",
+    "Hourly checks can miss intrahour stops/targets; stops are not guaranteed",
+    "Repeated correlated signals are not independent trials",
+    "Taxes and account settlement restrictions are not simulated"
+  ]
+}

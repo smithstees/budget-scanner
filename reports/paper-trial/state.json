@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "trial_id": "budget-options-50-v1",
+  "paper_only": true,
+  "rules": {
+    "target_signals": 50,
+    "starting_cash": 200.0,
+    "max_entry_cost": 30.0,
+    "max_open_positions": 3,
+    "contracts_per_trade": 1,
+    "fee_per_side": 0.65,
+    "slippage_per_share": 0.01,
+    "target_multiplier": 1.5,
+    "stop_multiplier": 0.4,
+    "max_holding_days": 7,
+    "realized_loss_stop": 60.0,
+    "maximum_calendar_days": 60,
+    "minimum_score": 65,
+    "data_delay_warning": "Public data may be delayed; hourly observations miss intrahour stops",
+    "selection": "Existing live mean-reversion score >=65; exact long CALL/PUT contracts; existing quality filters unchanged"
+  },
+  "started_at": "2026-10-28T15:32:22.970883+00:00",
+  "last_run_at": "2026-10-28T15:32:22.970883+00:00",
+  "cash": 200.0,
+  "signals": [],
+  "observations": [
+    {
+      "as_of": "2026-10-28T15:32:22.970883+00:00",
+      "diagnostics": {
+        "stocks_checked": 41,
+        "stock_data_missing": 21,
+        "quality_rejections": {
+          "Earnings calendar unavailable": 1,
+          "Realized-volatility data unavailable": 1,
+          "No quoted, liquid contract within expiry, delta and ASK budget limits": 1,
+          "Market regime unavailable or neutral": 1
+        },
+        "eligible_this_run": 0
+      }
+    }
+  ],
+  "equity_high": 200.0,
+  "max_observed_drawdown": 0.0,
+  "collection_finished": false,
+  "status": "collecting",
+  "stop_reason": null
+}

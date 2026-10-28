@@ -105,7 +105,7 @@ body { min-height: 100vh; padding: 0 0 20px; }
 .empty { text-align: center; padding: 40px 20px; color: #64748b; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 2.4; }
 </style>
 </head>
-<body>
+<body><p style="padding:12px;color:#fbbf24">Research signals from stock candles only. Delayed data and estimated contracts; no validated option returns.</p>
 
 <div class="header">
   <div>
@@ -378,7 +378,7 @@ async function analyze(ticker) {
     sig.action = trend === 'bullish'
       ? 'CALL near $' + res.toFixed(2) + ' strike · 2–4 wk expiry · OI > 50'
       : 'PUT near $' + sup.toFixed(2) + ' strike · 2–4 wk expiry · OI > 50';
-    scanLog.push({ t: ticker, ok: true, msg: '$' + sig.price + ' ' + trend + ' ' + sig.prob + '% vol ' + relVol + 'x' });
+    scanLog.push({ t: ticker, ok: true, msg: '$' + sig.price + ' ' + trend + ' ' + sig.prob + '/100 vol ' + relVol + 'x' });
     return sig;
   } catch(e) {
     scanLog.push({ t: ticker, ok: false, msg: 'err: ' + e.message });
@@ -431,7 +431,7 @@ function renderCards() {
   document.getElementById('statsRow').innerHTML =
     '<div class="stat"><div class="stat-val">' + results.length + '</div><div class="stat-lbl">Signals</div></div>' +
     '<div class="stat"><div class="stat-val g">' + bull + '</div><div class="stat-lbl">Bullish</div></div>' +
-    '<div class="stat"><div class="stat-val a">' + strong + '</div><div class="stat-lbl">65%+ prob</div></div>';
+    '<div class="stat"><div class="stat-val a">' + strong + '</div><div class="stat-lbl">score 65+/100</div></div>';
   if (!list.length) {
     document.getElementById('cardList').innerHTML = '<div class="empty">No signals match this filter.</div>';
     return;
@@ -452,7 +452,7 @@ function renderCards() {
           '<span class="chg ' + chgCls + '">' + chgStr + '</span>' +
           '<span class="dir ' + (r.trend==='bullish'?'bull':'bear') + '">' + (r.trend==='bullish'?'↑ BULL':'↓ BEAR') + '</span>' +
         '</div>' +
-        '<div class="prob-hdr"><span class="prob-title">50% GAIN PROB · 2-WK</span><span class="prob-pct ' + r.tier + '">' + r.prob + '%</span></div>' +
+        '<div class="prob-hdr"><span class="prob-title">SETUP SCORE · NOT A WIN PROBABILITY</span><span class="prob-pct ' + r.tier + '">' + r.prob + '%</span></div>' +
         '<div class="prob-bar"><div class="prob-fill ' + r.tier + '" style="width:' + r.prob + '%"></div></div>' +
         '<div class="prob-sub ' + r.tier + '">' + probLbl + ' · ' + (r.factors.slice(0,2).join(' · ') || '') + '</div>' +
         '<div class="candles">' + cHTML + '</div>' +
@@ -479,3 +479,4 @@ function renderLog() {
 </script>
 </body>
 </html>
+

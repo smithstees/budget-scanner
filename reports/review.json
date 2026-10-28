@@ -1,0 +1,18 @@
+{
+  "signals_reviewed": 1537,
+  "outcomes": {
+    "UNVERIFIED": 1537
+  },
+  "closed_paper_trades": 0,
+  "net_paper_pnl": null,
+  "closed_trade_drawdown": null,
+  "monthly_net_paper_pnl": {},
+  "by_scanner": {},
+  "proven_monthly_income": false,
+  "limitations": [
+    "Quoted paper fills, not actual executions",
+    "Unsampled price moves and open-position losses are not measured",
+    "No account-level capital or simultaneous-position limits are simulated",
+    "Legacy estimated premiums are never treated as real trade prices"
+  ]
+}

@@ -1,1 +1,6 @@
 __pycache__/
+
+reports/signals_scored.jsonl
+option_quotes.jsonl
+trade-journal*.json
+brokerage*.csv

@@ -1,0 +1,47 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+function journal(seed=[]){
+ const data={trade_log:JSON.stringify(seed)};
+ const context={window:{},localStorage:{getItem:k=>data[k]??null,setItem:(k,v)=>data[k]=v,removeItem:k=>delete data[k]},
+   fetch:()=>Promise.resolve(),setTimeout:()=>{},console};
+ vm.runInNewContext(fs.readFileSync('trade_logger.js','utf8'),context);
+ return context.window.TradeLogger;
+}
+let log=journal();
+let t=log.logBuy('TEST',.20,{quantity:2,fees:1,mode:'actual',direction:'PUT'});
+assert.equal(t.entryCost,41);
+let partial=log.logSell(t.id,.30,{quantity:1,fees:.5});
+assert.equal(partial.remainingQuantity,1);
+assert.equal(partial.pnl,9);
+assert.equal(log.stats('actual').totalPnl,9);
+let closed=log.expire(t.id,{fees:.5});
+assert.equal(closed.exitPrice,.15);
+assert.equal(closed.pnl,-12);
+assert.equal(log.getOpen().length,0);
+assert.equal(log.getClosed().length,1);
+assert.equal(log.logSell(t.id,1),null);
+assert.equal(log.stats('actual').totalPnl,-12);
+let zero=log.logBuy('ZERO',.10,{mode:'actual'});
+assert.equal(log.expire(zero.id).exitPrice,0);
+assert.equal(log.getOpen().length,0);
+assert.equal(log.getClosed().length,2);
+assert.equal(JSON.parse(log.exportJSON()).trades[0].exitPrice,0);
+let paper=log.logBuy('PAPER',.1);
+log.logSell(paper.id,.3);
+assert.equal(log.stats('paper').totalPnl,20);
+assert.equal(log.stats('actual').totalPnl,-22);
+for(const price of [NaN,Infinity,-1,0,'0.2junk','']) assert.equal(log.logBuy('BAD',price),null);
+assert.equal(log.logBuy('BAD',.2,{quantity:1.5}),null);
+let x=log.logBuy('TEST',.2);
+assert.equal(log.logSell(x.id,-1),null);
+assert.equal(log.logSell(x.id,Infinity),null);
+assert.equal(log.logSell(x.id,.4,{quantity:2}),null);
+let stock=log.logBuy('STOCK',5,{direction:'STOCK',quantity:3});
+assert.equal(stock.entryCost,15);
+assert.equal(log.logSell(stock.id,6).pnl,3);
+let legacy=journal([{id:'old',ticker:'OLD',entryPrice:.2,entryCost:20,exitPrice:null}]);
+assert.equal(legacy.expire('old').mode,'unverified');
+assert.equal(legacy.stats('actual').closed,0);
+assert.equal(legacy.stats('unverified').totalPnl,-20);
+console.log('Trade logger: zero exits, fees, quantities, partial exits, mode separation, legacy preservation and validation passed.');

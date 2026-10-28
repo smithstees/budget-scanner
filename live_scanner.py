@@ -240,8 +240,8 @@ def analyze(ticker, bars, prev_close):
 
 def push_signal(sig):
     direction = sig['contract_type']
-    title = f"[LIVE {direction}] {sig['ticker']} {sig['tier']} {sig['score']}%"
-    est_ct = round(sig['est_cost'] * 100)
+    title = f"[LIVE {direction}] {sig['ticker']} {sig['tier']} score {sig['score']}/100"
+    est_ct = round(sig['entry_ask'] * 100, 2)
     # Sell zone: 65% of the way from current to strike
     if sig['trend'] == 'BULLISH':
         sell_zone = round(sig['price'] + 0.65 * (sig['strike'] - sig['price']), 2)
@@ -252,10 +252,10 @@ def push_signal(sig):
         f"Range: ${sig['day_low']:.2f} — ${sig['day_high']:.2f} "
         f"(at {int(sig['day_pos']*100)}%)\n"
         f"RSI(5m): {sig['rsi']} | vol: {sig['rel_vol']}x last hour\n"
-        f"Buy {direction} strike ${sig['strike']:.2f} (3-5 OTM)\n"
-        f"Expiry 30-45 days | ~${est_ct}/contract | OI>50\n"
+        f"Buy {direction} strike ${sig['strike']:.2f} (quoted contract)\n"
+        f"Expiry {sig['expiry']} | quoted ask ${est_ct}/contract\n"
         f"SELL when stock hits ~${sell_zone:.2f} · stop -60%\n"
-        f"💡 Take HALF off at +50% — lock the win\n"
+        f"💡 Research only; partial exits require at least two contracts\n"
         f"⚠ Live scan — verify contract price in broker."
     )
     try:
@@ -302,55 +302,11 @@ def push_summary(signals, pushed):
 
 
 def _enrich_live(sig, regime):
-    """
-    Same quality checks as nightly, applied only to candidate pushes to keep
-    intraday fast. Returns (sig, ok, reasons).
-    """
-    reasons = []
-    ticker = sig['ticker']
-
-    # Earnings blackout (biggest single cause of IV-crush losses on longs)
-    if sq.has_earnings_within(ticker, config.EARNINGS_BLACKOUT_DAYS) is True:
-        sig['earnings_within_days'] = config.EARNINGS_BLACKOUT_DAYS
-        reasons.append(f"Earnings within {config.EARNINGS_BLACKOUT_DAYS}d (IV crush risk)")
-
-    # IV rank ceiling (paying up for premium)
-    ivr = sq.iv_rank(ticker)
-    if ivr is not None:
-        sig['iv_rank'] = ivr
-        if ivr > config.IV_RANK_CEILING:
-            reasons.append(f"IV Rank {ivr} > {config.IV_RANK_CEILING}")
-
-    # Real delta strike + liquidity
-    direction = sig.get('trend', 'BULLISH')
-    real = sq.target_delta_strike(ticker, sig['price'], 35, direction)
-    if real:
-        sig['real_strike']       = real['strike']
-        sig['real_expiry']       = real['expiry']
-        sig['real_delta']        = real['delta']
-        sig['real_iv']           = real['iv']
-        sig['real_oi']           = real['oi']
-        sig['real_mid']          = real['mid']
-        sig['real_spread_pct']   = real['spread_pct']
-        sig['real_est_contract'] = round(real['mid'] * 100)
-        if not sq.is_liquid(real):
-            reasons.append(
-                f"Illiquid OI={real['oi']} spread={int(real['spread_pct']*100)}%"
-            )
-
-    # SPY regime bias
-    score = sig.get('score', 0)
-    if regime == 'BEARISH' and direction == 'BULLISH' and score < 65:
-        reasons.append("SPY < 200d SMA; CALL below high-conviction cutoff")
-    elif regime == 'BULLISH' and direction == 'BEARISH' and score < 65:
-        reasons.append("SPY > 200d SMA; PUT below high-conviction cutoff")
-
-    sig['quality_blocks'] = reasons
-    ok = (not reasons) if config.QUALITY_STRICT else True
-    if reasons:
-        for r in reasons:
-            print(f"  [quality]  {r}")
-    return sig, ok, reasons
+    if sq is None:
+        sig['contract_verified'] = False
+        sig['quality_blocks'] = ['Quality module unavailable']
+        return sig, False, sig['quality_blocks']
+    return sq.evaluate_long_signal(sig, regime)
 
 
 def main():
@@ -376,7 +332,7 @@ def main():
         print(f"SPY regime: {regime}  (last={det.get('last')}, 200d SMA={det.get('sma')})")
     else:
         regime = 'NEUTRAL'
-        print("Quality module unavailable (running unfiltered)")
+        print("Quality module unavailable (alerts blocked)")
 
     for i, ticker in enumerate(WATCHLIST):
         print(f"[{i+1}/{len(WATCHLIST)}] {ticker}")
@@ -388,7 +344,7 @@ def main():
             if candidate_push and sq is not None and config is not None:
                 sig, ok, reasons = _enrich_live(sig, regime)
             else:
-                ok = True
+                ok = False
             signals.append(sig)
             did_push = candidate_push and ok
             if did_push:
@@ -416,3 +372,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

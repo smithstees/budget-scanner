@@ -87,12 +87,10 @@ def _historical_volatility(closes: list[float], period: int = 30) -> float | Non
 
 def iv_rank(ticker: str) -> float | None:
     """
-    Approximate IV Rank using 1 year of realized vol as a proxy.
+    Rank current 21-day realized volatility within its observed yearly range.
 
-    True IV Rank compares current IV to 52-week IV range, but no free
-    source exposes historical IV. Realized-vol IVR is a reasonable proxy:
-    when realized vol is at the top of its 1-year range, implied vol
-    usually is too (and premium sellers are happier than buyers).
+    This is NOT implied-volatility rank and cannot measure option pricing or
+    identify IV crush. Retained function name for compatibility only.
 
     Returns 0-100 or None if unable to compute.
     """
@@ -153,7 +151,7 @@ def has_earnings_within(ticker: str, days: int = None) -> bool | None:
         events = data["quoteSummary"]["result"][0]["calendarEvents"]["earnings"]
         raw_dates = events.get("earningsDate", [])
         if not raw_dates:
-            return False
+            return None
         now = datetime.now(timezone.utc).timestamp()
         cutoff = now + days * 86400
         for entry in raw_dates:
@@ -318,26 +316,36 @@ def target_delta_strike(
     if not chain:
         return None
 
-    is_call = direction in ("BULLISH", "BULL")
+    direction = direction.upper()
+    if direction not in ("BULLISH", "BULL", "CALL", "BEARISH", "BEAR", "PUT"):
+        return None
+    is_call = direction in ("BULLISH", "BULL", "CALL")
     same_side = [c for c in chain if c["is_call"] == is_call]
     if not same_side:
         return None
 
+    today = datetime.now(timezone.utc).date()
+    same_side = [c for c in same_side if config.EXPIRY_DAYS_MIN <=
+                 (datetime.strptime(c["expiry"], "%Y-%m-%d").date() - today).days <= config.EXPIRY_DAYS_MAX]
+    # Filter budget/liquidity before choosing expiry; an unaffordable closest
+    # expiry must not hide an eligible contract at another allowed expiry.
+    same_side = [c for c in same_side if 0 < c["bid"] <= c["ask"]
+                 and config.CONTRACT_MIN <= c["ask"] <= config.CONTRACT_MAX
+                 and is_liquid(dict(c, spread_pct=(c["ask"] - c["bid"]) / ((c["ask"] + c["bid"]) / 2)))]
     all_expiries = sorted({c["expiry"] for c in same_side})
-    picked_expiry = _pick_expiration_near(expiry_days, all_expiries)
-    if not picked_expiry:
+    if not all_expiries:
         return None
 
     today = datetime.now(timezone.utc).date()
-    tte_days = max(1, (datetime.strptime(picked_expiry, "%Y-%m-%d").date() - today).days)
-
-    same_exp = [c for c in same_side if c["expiry"] == picked_expiry]
+    same_exp = same_side
 
     best = None
     best_diff = float("inf")
     target_mid_delta = (delta_low + delta_high) / 2.0
 
     for opt in same_exp:
+        picked_expiry = opt["expiry"]
+        tte_days = (datetime.strptime(picked_expiry, "%Y-%m-%d").date() - today).days
         strike = opt["strike"]
         bid = opt["bid"]
         ask = opt["ask"]
@@ -376,6 +384,9 @@ def target_delta_strike(
 def is_liquid(chain_entry: dict) -> bool:
     """OI >= MIN_OPEN_INTEREST AND spread <= MAX_SPREAD_PCT_OF_MID."""
     if not chain_entry:
+        return False
+    bid, ask = chain_entry.get("bid"), chain_entry.get("ask")
+    if not all(isinstance(v, (int, float)) and math.isfinite(v) for v in (bid, ask)) or not 0 < bid <= ask:
         return False
     if chain_entry.get("oi", 0) < config.MIN_OPEN_INTEREST:
         return False
@@ -451,3 +462,50 @@ class SectorCap:
 
     def state(self) -> dict[str, int]:
         return dict(self.counts)
+
+
+
+def evaluate_long_signal(sig, regime="NEUTRAL"):
+    """Fail closed on missing contract/earnings data, even in log-only mode.
+
+    Scores rank setups; they are not calibrated probabilities. An alert is a
+    research candidate, not a broker order or evidence of positive expectancy.
+    """
+    reasons = []
+    direction = str(sig.get('contract_type', sig.get('trend', ''))).upper()
+    direction = {'CALL': 'BULLISH', 'PUT': 'BEARISH'}.get(direction, direction)
+    if direction not in ('BULLISH', 'BEARISH'):
+        reasons.append('Unknown option direction')
+    sig['trend'] = direction
+    sig['contract_verified'] = False
+    sig['evaluation_mode'] = 'research'
+    earnings = has_earnings_within(sig['ticker'], config.EARNINGS_BLACKOUT_DAYS)
+    if earnings is not False:
+        reasons.append('Earnings in blackout window' if earnings else 'Earnings calendar unavailable')
+    rv_rank = iv_rank(sig['ticker'])
+    sig['realized_vol_rank'] = rv_rank  # not implied-volatility rank
+    if rv_rank is None:
+        reasons.append('Realized-volatility data unavailable')
+    elif rv_rank > config.IV_RANK_CEILING:
+        reasons.append('Elevated realized-volatility rank')
+    real = target_delta_strike(sig['ticker'], sig['price'], 35, direction)
+    if not real:
+        reasons.append('No quoted, liquid contract within expiry, delta and ASK budget limits')
+    else:
+        for key in ('strike', 'expiry', 'delta', 'iv', 'oi', 'mid', 'bid', 'ask', 'spread_pct', 'tte_days'):
+            sig['real_' + key] = real[key]
+        sig['real_est_contract'] = round(real['ask'] * 100, 2)
+        sig.update(strike=real['strike'], expiry=real['expiry'], est_cost=real['ask'],
+                   entry_bid=real['bid'], entry_ask=real['ask'])
+        if not is_liquid(real):
+            reasons.append('Invalid or illiquid contract quote')
+        if not config.CONTRACT_MIN <= real['ask'] <= config.CONTRACT_MAX:
+            reasons.append('Contract ASK outside budget')
+    if regime == 'NEUTRAL':
+        reasons.append('Market regime unavailable or neutral')
+    elif ((regime == 'BEARISH' and direction == 'BULLISH') or
+          (regime == 'BULLISH' and direction == 'BEARISH')) and sig.get('score', 0) < 65:
+        reasons.append('Countertrend setup below research score threshold')
+    sig['quality_blocks'] = reasons
+    sig['contract_verified'] = real is not None and not reasons
+    return sig, sig['contract_verified'], reasons

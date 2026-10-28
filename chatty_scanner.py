@@ -19,6 +19,7 @@ v3 CHANGES:
 import os
 import time
 import requests
+import scanner_quality as sq
 from datetime import datetime, timedelta
 
 try:
@@ -136,7 +137,7 @@ def analyze(ticker, meta):
     live_bar    = bars[-1]
     price       = live_bar["c"]
 
-    prev_close  = closed_bars[-2]["c"] if in_market else closed_bars[-1]["c"]
+    prev_close  = closed_bars[-1]["c"] if in_market else closed_bars[-2]["c"]
     if not in_market:
         # Yesterday vs the day before
         prev_close = closed_bars[-2]["c"]
@@ -246,12 +247,12 @@ def format_signal(r):
     sup     = f" ⚡near support ${r['support']}" if r["near_sup"] else ""
     est_ct  = round(r['est_cost'] * 100)
     action  = (
-        f"In broker: CALL strike ${r['otm_strike']} (3-5 OTM) · "
+        f"In broker: CALL strike ${r['otm_strike']} (quoted contract) · "
         f"{EXPIRY_DAYS_MIN}-{EXPIRY_DAYS_MAX} day expiry · "
         f"~${est_ct}/contract · OI > 50"
     )
     return (
-        f"{r['ticker']} ({r['type']})  ${r['price']}  ({chg})  {r['probability']}% prob\n"
+        f"{r['ticker']} ({r['type']})  ${r['price']}  ({chg})  score {r['probability']}/100\n"
         f"  → {stars} · vol:{r['rel_vol']}x · ATR:{r['atr_pct']}%{sup}\n"
         f"  → {action}\n"
         f"  SELL when stock hits ~${r['sell_zone']} · stop -60% on contract"
@@ -284,12 +285,21 @@ def main():
         log_signal = None
 
     results = []
+    regime = sq.spy_regime()
+    sector_cap = sq.SectorCap()
     for ticker, meta in TICKERS.items():
         print(f"Checking {ticker} ({meta['type']})...", end=" ", flush=True)
         sig = analyze(ticker, meta)
         if sig:
+            sig['candle_trend'] = sig['trend']
+            sig.update(trend='BULLISH', contract_type='CALL', score=sig['probability'])
+            sig, eligible, _ = sq.evaluate_long_signal(sig, regime)
+            sig['eligible'] = eligible and sector_cap.try_accept(config.sector_of(ticker))
+            if sig['eligible']:
+                sig['otm_strike'] = sig['strike']
+                sig['sell_zone'] = round(sig['price'] + .65 * (sig['strike'] - sig['price']), 2)
             results.append(sig)
-            print(f"${sig['price']} {sig['change_pct']}% — {sig['probability']}% prob ✓")
+            print(f"${sig['price']} {sig['change_pct']}% — score {sig['probability']}/100 ✓")
             if log_signal is not None:
                 # Normalize field names to shared schema
                 normalized = {
@@ -303,8 +313,8 @@ def main():
                     'rel_vol':       sig.get('rel_vol'),
                     'atr_pct':       sig.get('atr_pct'),
                 }
-                did_push = sig.get('probability', 0) >= NOTIFY_MIN_PROB
-                log_signal('chatty', normalized, pushed=did_push)
+                did_push = sig['eligible'] and sig.get('probability', 0) >= NOTIFY_MIN_PROB
+                log_signal('chatty', sig, pushed=did_push)
         else:
             print("no setup")
         time.sleep(0.5)
@@ -314,7 +324,7 @@ def main():
     print(f"\n{'─'*60}")
     print(f"Setups found: {len(results)} / {len(TICKERS)}")
 
-    strong = [r for r in results if r["probability"] >= NOTIFY_MIN_PROB]
+    strong = [r for r in results if r.get("eligible") and r["probability"] >= NOTIFY_MIN_PROB]
 
     if not results:
         send_notification(
@@ -328,11 +338,11 @@ def main():
 
     if not strong:
         # Log-only summary, no phone push for weak setups
-        print(f"Only weak setups (top prob {results[0]['probability']}%). Not notifying.")
+        print(f"Only weak setups (top score {results[0]['probability']}/100). Not notifying.")
         send_notification(
             f"Chatty: {len(results)} weak setup(s), no push",
-            f"Nothing scored >= {NOTIFY_MIN_PROB}% today.\n"
-            f"Top: {results[0]['ticker']} @ {results[0]['probability']}% prob.",
+            f"Nothing scored >= {NOTIFY_MIN_PROB}/100 after contract checks today.\n"
+            f"Top: {results[0]['ticker']} @ score {results[0]['probability']}/100.",
             priority="low"
         )
         return
@@ -352,7 +362,7 @@ def main():
         f"✅ CALL 3–5 strikes OTM, {EXPIRY_DAYS_MIN}–{EXPIRY_DAYS_MAX} days out (30+ = less theta bleed)\n"
         f"✅ Contract ${CONTRACT_MIN}–${CONTRACT_MAX}/share (~${int(CONTRACT_MIN*100)}–${int(CONTRACT_MAX*100)})\n"
         f"🚪 Exit: sell as stock approaches strike (65% of the way) OR -60% stop\n"
-        f"💡 Take HALF off at +50% — lock the win"
+        f"💡 Research candidate; scores are not win probabilities"
     )
 
     send_notification(title, body, "high")
@@ -361,3 +371,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

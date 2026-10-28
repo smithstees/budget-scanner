@@ -94,3 +94,40 @@ taxes, or open-position mark-to-market drawdown. Sparse quotes cannot establish 
 intraday stop was honored. Neither a positive paper result nor bug-free software
 establishes that $500/month is reliable. No parameter “winning combo” has been
 validated by this repair.
+
+## Finite 50-signal test (authorized October 28, 2026)
+
+`paper_trial.py` runs a separate forward experiment, without calling any order or
+notification function. Frozen rules: $200 hypothetical starting cash; one long
+CALL or PUT per accepted entry; $30 maximum entry including $0.65 fee and $0.01
+per-share adverse slippage; at most three open positions and one per ticker.
+Entry score is at least 65, with the repaired contract/earnings/liquidity checks.
+The first 50 qualifying signals are recorded in chronological scan order (ranked
+by score within a scan). The same contract can appear at most once per ET date.
+All skipped signals and reasons stay in the report; 50 signals is not necessarily
+50 executed paper trades when cash/capacity is constrained.
+
+Full-position exits use the first observed bid less $0.01 slippage at +50%, -60%,
+or after seven calendar days. Each exit includes a $0.65 fee. New intake pauses
+after $60 of realized simulated losses, 50 signals, or a 60-day collection limit;
+open positions continue being followed. That loss guard does not guarantee losses
+cannot exceed $60 between observations. An expired position with no verified exit
+remains explicitly unverified, with its cost reserved, rather than becoming a win.
+
+The Fifty-signal paper trial workflow starts on the implementation push and checks
+hourly during weekday market windows, using an ET runtime guard for DST. GitHub
+schedules can be delayed or skipped. Market holidays may run and are rejected by
+stock-bar freshness checks. Public data can be delayed; hourly observations cannot
+establish whether an intrahour stop/target happened first. This is a coarse forward
+experiment, not an executable intraday performance guarantee. The original general
+scanner schedules remain paused. No paid data subscriptions or real-money orders
+are authorized by this experiment.
+
+Persistent public experiment evidence lives in `reports/paper-trial/state.json`
+and `reports/paper-trial/latest.json`. The report distinguishes qualifying signals,
+skipped entries, actual paper positions, missing observations, realized P&L, and
+observed marked equity/drawdown. Missing marks are unknown. Closed P&L is not the
+same as total account return when positions remain open/unverified. Direction
+comparisons are descriptive, not a reason to retroactively cherry-pick a winner.
+The experiment stops collecting automatically; its completion status is reported
+by the follow-up task. Scheduler calls after completion do not fetch new data.

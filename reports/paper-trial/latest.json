@@ -1,7 +1,7 @@
 {
   "trial_id": "budget-options-50-v1",
   "paper_only": true,
-  "as_of": "2026-10-28T15:32:22.970883+00:00",
+  "as_of": "2026-10-29T19:25:43.935085+00:00",
   "status": "collecting",
   "rules": {
     "target_signals": 50,
@@ -34,7 +34,7 @@
   "descriptive_by_direction": {},
   "diagnostics": {
     "stocks_checked": 41,
-    "stock_data_missing": 21,
+    "stock_data_missing": 27,
     "quality_rejections": {
       "Earnings calendar unavailable": 1,
       "Realized-volatility data unavailable": 1,

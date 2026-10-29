@@ -20,7 +20,7 @@
     "selection": "Existing live mean-reversion score >=65; exact long CALL/PUT contracts; existing quality filters unchanged"
   },
   "started_at": "2026-10-28T15:32:22.970883+00:00",
-  "last_run_at": "2026-10-28T15:32:22.970883+00:00",
+  "last_run_at": "2026-10-29T19:25:43.935085+00:00",
   "cash": 200.0,
   "signals": [],
   "observations": [
@@ -29,6 +29,20 @@
       "diagnostics": {
         "stocks_checked": 41,
         "stock_data_missing": 21,
+        "quality_rejections": {
+          "Earnings calendar unavailable": 1,
+          "Realized-volatility data unavailable": 1,
+          "No quoted, liquid contract within expiry, delta and ASK budget limits": 1,
+          "Market regime unavailable or neutral": 1
+        },
+        "eligible_this_run": 0
+      }
+    },
+    {
+      "as_of": "2026-10-29T19:25:43.935085+00:00",
+      "diagnostics": {
+        "stocks_checked": 41,
+        "stock_data_missing": 27,
         "quality_rejections": {
           "Earnings calendar unavailable": 1,
           "Realized-volatility data unavailable": 1,

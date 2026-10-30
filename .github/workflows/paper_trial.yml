@@ -2,10 +2,10 @@ name: Fifty-signal paper trial
 on:
   push:
     branches: [main]
-    paths: [paper_trial.py, .github/workflows/paper_trial.yml]
+    paths: [paper_trial.py, paper_data_probe.py, market_data.py, live_scanner.py, scanner_quality.py, .github/workflows/paper_trial.yml]
   schedule:
     # Hourly observations; runtime checks ET to handle daylight saving changes.
-    - cron: '0 14-21 * * 1-5'
+    - cron: '47 13-20 * * 1-5'
   workflow_dispatch:
 permissions:
   contents: write
@@ -22,8 +22,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: .market-data-cache
+          key: public-market-history-${{ github.run_id }}
+          restore-keys: public-market-history-
       - run: python paper_trial.py
+      - name: Small daily data-health probe (not a paper trade)
+        run: python paper_data_probe.py
       - name: Save paper experiment only
+        if: always()
         run: |
           if [ -d reports/paper-trial ]; then
             git config user.name 'github-actions[bot]'

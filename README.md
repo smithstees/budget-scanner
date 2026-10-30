@@ -131,3 +131,35 @@ same as total account return when positions remain open/unverified. Direction
 comparisons are descriptive, not a reason to retroactively cherry-pick a winner.
 The experiment stops collecting automatically; its completion status is reported
 by the follow-up task. Scheduler calls after completion do not fetch new data.
+
+## Data-collection repair — October 29, 2026
+
+The trial strategy and account rules remain frozen. Collection repairs are:
+- Shared public-data transport with 0.5-second request spacing, at most three
+  attempts for transient failures, bounded backoff/Retry-After, and no retry for
+  authentication failures. Successful daily histories expire after six hours;
+  earnings responses expire after one hour. GitHub caches carry these between
+  jobs. Expired data is never a fallback. Stock bars and option chains are not cached.
+- The stock session opening uses America/New_York explicitly, including DST.
+- Option entries, marks, and exits require an explicit timezone-aware option
+  quote timestamp no more than 30 minutes old. Retrieval time and underlying
+  stock last-trade time are not substituted. The Nasdaq adapter recognizes explicit
+  row quoteTimestamp/quoteTime fields only; absent fields block paper execution.
+  This feed may therefore remain unsuitable. This is an evidence check, not a
+  relaxation of the price, liquidity, earnings, delta, or score rules.
+- Chain request failures, malformed responses, unavailable timestamps, and valid
+  chains without an eligible contract are distinguished. Provider status counts
+  appear in new observations, rather than treating a green workflow as good data.
+- Scheduled checks use minute 47 instead of minute 0. UTC hours cover both DST
+  seasons; the New York runtime guard records outside-window attempts. Scheduling
+  is still best effort, not guaranteed hourly or intraday stop execution.
+- reports/paper-trial/attempts.json retains the last 100 attempts, including
+  outside-window and execution failures. Old trial observations remain intact.
+  A small once-per-UTC-day SOFI provider probe saves data-health.json even outside
+  market hours; it is diagnostic evidence, never a counted signal or simulated fill.
+
+Next validation gate: observe fresh stock bars and timestamped exact option quotes
+in market hours, with successful earnings/history checks. Passing offline tests or
+an after-hours probe does not pass that gate. No paid feeds or external alerts are
+used. Changing providers requires verifying equivalent data/timestamps, not mixing
+in synthetic quotes or backfilling prior signals.

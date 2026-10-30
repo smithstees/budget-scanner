@@ -13,7 +13,9 @@ Pushes to ntfy.sh topic: ragebudgetopt
 """
 
 import os, time, math, json, urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+import market_data
 
 def _ascii(s):
     # ntfy Title header must be latin-1 safe. Strip fancy unicode (— ★ ⚡ etc.)
@@ -62,11 +64,9 @@ def fetch_intraday(ticker):
     """Return list of 5-minute bars for today's session, plus previous close."""
     url = f"{YAHOO_URL}{ticker}?interval=5m&range=2d&includePrePost=false"
     try:
-        req = urllib.request.Request(url, headers={
-            'User-Agent': 'Mozilla/5.0 (compatible; budget-scanner/1.0)'
-        })
-        with urllib.request.urlopen(req, timeout=10) as r:
-            data = json.loads(r.read())
+        data = market_data.get_json(url, timeout=10)
+        if data is None:
+            return None, None
         result = data.get('chart', {}).get('result', [])
         if not result:
             return None, None
@@ -120,7 +120,7 @@ def est_contract_cost(price, atr_pct_val):
     return round(base + vol_boost, 2)
 
 
-def analyze(ticker, bars, prev_close):
+def analyze(ticker, bars, prev_close, now=None):
     if not bars or len(bars) < 20 or not prev_close:
         print(f"  [{ticker}] not enough intraday bars")
         return None
@@ -133,7 +133,8 @@ def analyze(ticker, bars, prev_close):
     change_pct = round(((price - prev_close) / prev_close) * 100, 2)
 
     # Today's session only
-    today_start = datetime.now().replace(hour=9, minute=30, second=0, microsecond=0).timestamp()
+    local = (now or datetime.now(timezone.utc)).astimezone(ZoneInfo('America/New_York'))
+    today_start = local.replace(hour=9, minute=30, second=0, microsecond=0).timestamp()
     today_bars = [b for b in bars if b['t'] >= today_start] or bars[-40:]
 
     day_high = max(b['h'] for b in today_bars)
@@ -372,4 +373,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

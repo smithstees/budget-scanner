@@ -120,9 +120,9 @@ class QualityTests(unittest.TestCase):
 
     def test_contract_selection_budget_expiry_liquidity(self):
         expiry=(datetime.now(timezone.utc).date()+timedelta(days=35)).isoformat()
-        chain=[dict(expiry=expiry,strike=5,is_call=True,bid=.48,ask=.50,oi=200,volume=10),
-               dict(expiry=expiry,strike=6,is_call=True,bid=.18,ask=.20,oi=200,volume=10),
-               dict(expiry=expiry,strike=7,is_call=True,bid=0,ask=.10,oi=200,volume=10)]
+        chain=[dict(expiry=expiry,strike=5,is_call=True,bid=.48,ask=.50,oi=200,volume=10,quote_as_of=datetime.now(timezone.utc).isoformat()),
+               dict(expiry=expiry,strike=6,is_call=True,bid=.18,ask=.20,oi=200,volume=10,quote_as_of=datetime.now(timezone.utc).isoformat()),
+               dict(expiry=expiry,strike=7,is_call=True,bid=0,ask=.10,oi=200,volume=10,quote_as_of=datetime.now(timezone.utc).isoformat())]
         with patch.object(quality,'_fetch_nasdaq_chain',return_value=chain), \
              patch.object(quality,'_implied_vol',return_value=.5), \
              patch.object(quality,'_bs_delta',return_value=.3):

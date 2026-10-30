@@ -5,7 +5,7 @@ import paper_trial as trial
 NOW=datetime(2026,10,28,15,tzinfo=timezone.utc)
 def candidate(ticker='TEST',ask=.2):
  return dict(ticker=ticker,contract_type='CALL',strike=5,expiry='2026-12-04',score=70,
-             entry_bid=ask-.02,entry_ask=ask,contract_verified=True)
+             entry_bid=ask-.02,entry_ask=ask,contract_verified=True,quote_as_of=NOW.isoformat())
 class TrialTests(unittest.TestCase):
  def test_fifty_cap_and_cash(self):
   s=trial.new_state(NOW)
@@ -25,7 +25,7 @@ class TrialTests(unittest.TestCase):
   self.assertEqual(s['signals'][0]['reason'],'Insufficient simulated cash')
  def test_exit_loss_and_zero_are_counted(self):
   s=trial.new_state(NOW);trial.accept_candidates(s,[candidate()],NOW)
-  trial.close_positions(s,{'TEST':[dict(strike=5,expiry='2026-12-04',is_call=True,bid=0,ask=.01)]},NOW+timedelta(hours=1))
+  trial.close_positions(s,{'TEST':[dict(strike=5,expiry='2026-12-04',is_call=True,bid=0,ask=.01,quote_as_of=(NOW+timedelta(hours=1)).isoformat())]},NOW+timedelta(hours=1))
   self.assertEqual(s['signals'][0]['net_pnl'],-22.30)
   self.assertEqual(s['cash'],177.7)
  def test_missing_quote_not_a_profit(self):

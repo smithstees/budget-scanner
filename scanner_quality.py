@@ -30,22 +30,18 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import config
+import market_data
+
+CHAIN_HEALTH = {}
 
 _UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
 
 
 def _get_json(url: str, timeout: int = 15, extra_headers: dict | None = None) -> dict | None:
     """GET + parse JSON, gently. Returns None on any failure."""
-    headers = {"User-Agent": _UA, "Accept": "application/json"}
-    if extra_headers:
-        headers.update(extra_headers)
-    try:
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode())
-    except Exception as e:
-        print(f"  [quality] fetch failed ({url[:80]}...): {e}")
-        return None
+    # Slow-changing data can be reused, but never reuse old option chains.
+    ttl = 3600 if 'quoteSummary' in url else 21600 if 'interval=1d' in url else 0
+    return market_data.get_json(url, timeout, extra_headers, ttl=ttl)
 
 
 def _f(x) -> float | None:
@@ -182,6 +178,7 @@ def _fetch_nasdaq_chain(ticker: str, expiry_days: int) -> list[dict] | None:
         f"&excode=oprac&callput=callput&money=all&type=all"
     )
     data = _get_json(url)
+    CHAIN_HEALTH[ticker] = {"status": "request_failed" if data is None else "invalid_payload"}
     if not data:
         return None
     try:
@@ -189,6 +186,9 @@ def _fetch_nasdaq_chain(ticker: str, expiry_days: int) -> list[dict] | None:
     except (KeyError, TypeError):
         return None
 
+    if not isinstance(rows, list):
+        return None
+    CHAIN_HEALTH[ticker] = {"status": "empty_chain" if not rows else "received"}
     parsed: list[dict] = []
     current_expiry = None
     for row in rows:
@@ -206,6 +206,8 @@ def _fetch_nasdaq_chain(ticker: str, expiry_days: int) -> list[dict] | None:
         if strike is None:
             continue
 
+        # These must be option quote timestamps, never the underlying's lastTrade.
+        stamp = market_data.quote_time(row.get('quoteTimestamp') or row.get('quoteTime'))
         # calls
         c_bid = _f(row.get("c_Bid"))
         c_ask = _f(row.get("c_Ask"))
@@ -215,6 +217,7 @@ def _fetch_nasdaq_chain(ticker: str, expiry_days: int) -> list[dict] | None:
                 "bid": c_bid or 0.0, "ask": c_ask or 0.0,
                 "oi": _i(row.get("c_Openinterest")) or 0,
                 "volume": _i(row.get("c_Volume")) or 0,
+                "quote_as_of": stamp,
             })
         # puts
         p_bid = _f(row.get("p_Bid"))
@@ -225,7 +228,12 @@ def _fetch_nasdaq_chain(ticker: str, expiry_days: int) -> list[dict] | None:
                 "bid": p_bid or 0.0, "ask": p_ask or 0.0,
                 "oi": _i(row.get("p_Openinterest")) or 0,
                 "volume": _i(row.get("p_Volume")) or 0,
+                "quote_as_of": stamp,
             })
+    fresh = sum(market_data.fresh_option(q) for q in parsed)
+    CHAIN_HEALTH[ticker] = dict(status='received' if parsed else 'empty_chain',
+                                contracts=len(parsed), fresh_quotes=fresh,
+                                missing_quote_timestamps=sum(q['quote_as_of'] is None for q in parsed))
     return parsed
 
 
@@ -320,7 +328,7 @@ def target_delta_strike(
     if direction not in ("BULLISH", "BULL", "CALL", "BEARISH", "BEAR", "PUT"):
         return None
     is_call = direction in ("BULLISH", "BULL", "CALL")
-    same_side = [c for c in chain if c["is_call"] == is_call]
+    same_side = [c for c in chain if c["is_call"] == is_call and market_data.fresh_option(c)]
     if not same_side:
         return None
 
@@ -377,6 +385,7 @@ def target_delta_strike(
                     "mid": round(mid, 3),
                     "spread_pct": round(spread_pct, 3),
                     "is_call": is_call,
+                    "quote_as_of": opt.get("quote_as_of"),
                 }
     return best
 
@@ -490,13 +499,21 @@ def evaluate_long_signal(sig, regime="NEUTRAL"):
         reasons.append('Elevated realized-volatility rank')
     real = target_delta_strike(sig['ticker'], sig['price'], 35, direction)
     if not real:
-        reasons.append('No quoted, liquid contract within expiry, delta and ASK budget limits')
+        health = CHAIN_HEALTH.get(sig['ticker'], {})
+        if health.get('status') == 'request_failed':
+            reasons.append('Option-chain request failed')
+        elif health.get('status') == 'invalid_payload':
+            reasons.append('Option-chain payload invalid')
+        elif health.get('contracts', 0) and not health.get('fresh_quotes'):
+            reasons.append('Option quote timestamps missing or stale')
+        else:
+            reasons.append('No quoted, liquid contract within expiry, delta and ASK budget limits')
     else:
         for key in ('strike', 'expiry', 'delta', 'iv', 'oi', 'mid', 'bid', 'ask', 'spread_pct', 'tte_days'):
             sig['real_' + key] = real[key]
         sig['real_est_contract'] = round(real['ask'] * 100, 2)
         sig.update(strike=real['strike'], expiry=real['expiry'], est_cost=real['ask'],
-                   entry_bid=real['bid'], entry_ask=real['ask'])
+                   entry_bid=real['bid'], entry_ask=real['ask'], quote_as_of=real.get('quote_as_of'))
         if not is_liquid(real):
             reasons.append('Invalid or illiquid contract quote')
         if not config.CONTRACT_MIN <= real['ask'] <= config.CONTRACT_MAX:

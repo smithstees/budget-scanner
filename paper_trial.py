@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import market_data
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -62,7 +63,7 @@ def close_positions(state, chains, now):
             s['status']='UNVERIFIED_EXIT'
             s['reason']='Expiry reached without verified settlement/exit; cost remains reserved'
             continue
-        if not quote_valid(q): continue
+        if not quote_valid(q) or not market_data.fresh_option(q, now): continue
         price=round(max(0,q['bid']-rules['slippage_per_share']),4)
         s['last_observed_bid']=q['bid']
         s['last_mark_at']=now.isoformat()
@@ -84,13 +85,14 @@ def accept_candidates(state,candidates,now):
     seen={s['daily_key'] for s in state['signals']}
     for candidate in sorted(candidates,key=lambda x:(-x['score'],x['ticker'])):
         if len(state['signals'])>=rules['target_signals'] or state['collection_finished']:break
+        if not market_data.fresh_option(candidate, now): continue
         if not candidate.get('contract_verified') or candidate.get('score',0)<rules['minimum_score']:continue
         if candidate.get('contract_type') not in ('CALL','PUT'):continue
         if not candidate.get('expiry') or not finite(candidate.get('strike')) or not 0<candidate['entry_bid']<=candidate['entry_ask']:continue
         key='|'.join(map(str,(now.astimezone(ET).date().isoformat(),*contract_key(candidate))))
         if key in seen:continue
         seen.add(key)
-        s={k:candidate[k] for k in ('ticker','contract_type','strike','expiry','score','entry_bid','entry_ask')}
+        s={k:candidate[k] for k in ('ticker','contract_type','strike','expiry','score','entry_bid','entry_ask','quote_as_of')}
         s.update(signal_id=hashlib.sha256(key.encode()).hexdigest()[:24],daily_key=key,
                  observed_at=now.isoformat(),status='SKIPPED',reason=None)
         entry_price=round(s['entry_ask']+rules['slippage_per_share'],4)
@@ -153,6 +155,8 @@ def build_report(state,now,diagnostics,equity):
 def run(state,now,fetch_bars=live.fetch_intraday,fetch_chain=quality._fetch_nasdaq_chain):
     if state['rules']!=RULES:raise ValueError('Frozen trial rules differ; do not change an active experiment')
     diagnostics={'stocks_checked':0,'stock_data_missing':0,'quality_rejections':{},'eligible_this_run':0}
+    market_data.reset_events()
+    quality.CHAIN_HEALTH.clear()
     candidates=[]
     if state['status'] in ('finished','finished_with_missing_exits'):
         return build_report(state,now,diagnostics,update_status(state,now))
@@ -169,7 +173,7 @@ def run(state,now,fetch_bars=live.fetch_intraday,fetch_chain=quality._fetch_nasd
             last=bars[-1].get('t')
             if last is None or not 0 <= now.timestamp()-last <= 30*60:
                 diagnostics['stock_data_missing']+=1;continue
-            sig=live.analyze(ticker,bars,prev)
+            sig=live.analyze(ticker,bars,prev,now=now)
             if not sig or sig['score']<RULES['minimum_score']:continue
             sig,ok,reasons=quality.evaluate_long_signal(sig,regime)
             if not ok:
@@ -178,6 +182,8 @@ def run(state,now,fetch_bars=live.fetch_intraday,fetch_chain=quality._fetch_nasd
             else:candidates.append(sig)
         diagnostics['eligible_this_run']=len(candidates)
         accept_candidates(state,candidates,now)
+    diagnostics['transport'] = market_data.health()
+    diagnostics['option_chains'] = dict(quality.CHAIN_HEALTH)
     equity=update_status(state,now)
     state['last_run_at']=now.isoformat()
     # Store all observations, including empty runs, so missing data is visible.
@@ -185,17 +191,35 @@ def run(state,now,fetch_bars=live.fetch_intraday,fetch_chain=quality._fetch_nasd
     return build_report(state,now,diagnostics,equity)
 
 
+def record_attempt(now, status, **details):
+    path = STATE_PATH.parent / 'attempts.json'
+    previous = json.loads(path.read_text()) if path.exists() else []
+    previous.append(dict(as_of=now.isoformat(), status=status, **details))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(previous[-100:], indent=2)+'\n')
+    print(json.dumps(previous[-1]))
+
+
 def main():
     now=datetime.now(timezone.utc);local=now.astimezone(ET)
     state=json.loads(STATE_PATH.read_text()) if STATE_PATH.exists() else new_state(now)
     if local.weekday()>=5 or not 9*60+30 <= local.hour*60+local.minute <= 16*60:
-        print('Outside regular weekday market window; no simulated entries or exits.')
+        record_attempt(now, 'outside_market_window')
         return
-    report=run(state,now)
-    STATE_PATH.parent.mkdir(parents=True,exist_ok=True)
-    STATE_PATH.write_text(json.dumps(state,indent=2)+'\n')
-    REPORT_PATH.write_text(json.dumps(report,indent=2)+'\n')
-    print(json.dumps(report,indent=2))
+    try:
+        report=run(state,now)
+        STATE_PATH.parent.mkdir(parents=True,exist_ok=True)
+        STATE_PATH.write_text(json.dumps(state,indent=2)+'\n')
+        REPORT_PATH.write_text(json.dumps(report,indent=2)+'\n')
+        d = report['diagnostics']
+        status = ('collection_stopped' if state['collection_finished'] else
+                  'partial_data' if d['stock_data_missing'] or d['quality_rejections'] else
+                  'observed')
+        record_attempt(now, status, diagnostics=d, qualifying_signals=report['qualifying_signals'])
+        print(json.dumps(report,indent=2))
+    except Exception as exc:
+        record_attempt(now, 'failed', error_type=type(exc).__name__)
+        raise
 
 
 if __name__=='__main__':main()

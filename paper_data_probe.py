@@ -10,9 +10,14 @@ import scanner_quality as quality
 import market_data
 
 
-def main():
+def main(root=None):
+    root = Path(root) if root else Path(__file__).resolve().parent
+    state_path = root / 'reports/paper-trial/state.json'
+    if state_path.exists() and json.loads(state_path.read_text()).get('status') in ('finished', 'finished_with_missing_exits'):
+        print('Trial finished; no diagnostic provider requests.')
+        return
     now = datetime.now(timezone.utc)
-    path = Path(__file__).resolve().parent / 'reports/paper-trial/data-health.json'
+    path = root / 'reports/paper-trial/data-health.json'
     if path.exists() and json.loads(path.read_text())['as_of'][:10] == now.date().isoformat():
         print('Daily diagnostic already recorded; no additional provider requests.')
         return

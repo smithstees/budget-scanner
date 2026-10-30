@@ -5,6 +5,7 @@ import urllib.error
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+import paper_data_probe as probe
 import market_data as data
 import paper_trial as trial
 import live_scanner as live
@@ -53,6 +54,14 @@ class TransportTests(unittest.TestCase):
             self.assertIsNone(data.get_json('https://example.com', ttl=60))
 
 class EvidenceTests(unittest.TestCase):
+    def test_completed_trial_makes_no_probe_requests(self):
+        with tempfile.TemporaryDirectory() as temp:
+            state=Path(temp)/'reports/paper-trial/state.json'
+            state.parent.mkdir(parents=True)
+            state.write_text(json.dumps({'status':'finished'}))
+            with patch.object(probe.live,'fetch_intraday',side_effect=AssertionError('No more data requests')):
+                probe.main(root=temp)
+
     def test_missing_stale_future_or_naive_option_time_blocks(self):
         for stamp in (None, '2026-10-28T15:00:00', (NOW-timedelta(hours=1)).isoformat(), (NOW+timedelta(seconds=1)).isoformat()):
             c = candidate(); c['quote_as_of'] = stamp

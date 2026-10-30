@@ -1,7 +1,7 @@
 {
   "trial_id": "budget-options-50-v1",
   "paper_only": true,
-  "as_of": "2026-10-29T19:25:43.935085+00:00",
+  "as_of": "2026-10-30T18:53:17.595021+00:00",
   "status": "collecting",
   "rules": {
     "target_signals": 50,
@@ -34,14 +34,44 @@
   "descriptive_by_direction": {},
   "diagnostics": {
     "stocks_checked": 41,
-    "stock_data_missing": 27,
+    "stock_data_missing": 14,
     "quality_rejections": {
-      "Earnings calendar unavailable": 1,
-      "Realized-volatility data unavailable": 1,
-      "No quoted, liquid contract within expiry, delta and ASK budget limits": 1,
-      "Market regime unavailable or neutral": 1
+      "Earnings calendar unavailable": 4,
+      "Option quote timestamps missing or stale": 4,
+      "Elevated realized-volatility rank": 2
     },
-    "eligible_this_run": 0
+    "eligible_this_run": 0,
+    "transport": {
+      "success": 49,
+      "http_401": 4,
+      "http_404": 1
+    },
+    "option_chains": {
+      "XPEV": {
+        "status": "received",
+        "contracts": 384,
+        "fresh_quotes": 0,
+        "missing_quote_timestamps": 384
+      },
+      "RIOT": {
+        "status": "received",
+        "contracts": 716,
+        "fresh_quotes": 0,
+        "missing_quote_timestamps": 716
+      },
+      "NOK": {
+        "status": "received",
+        "contracts": 494,
+        "fresh_quotes": 0,
+        "missing_quote_timestamps": 494
+      },
+      "ITUB": {
+        "status": "received",
+        "contracts": 66,
+        "fresh_quotes": 0,
+        "missing_quote_timestamps": 66
+      }
+    }
   },
   "conclusion": "INSUFFICIENT_EVIDENCE",
   "limitations": [

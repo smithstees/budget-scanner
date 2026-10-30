@@ -6,5 +6,51 @@
   {
     "as_of": "2026-10-30T02:40:52.201063+00:00",
     "status": "outside_market_window"
+  },
+  {
+    "as_of": "2026-10-30T18:53:17.595021+00:00",
+    "status": "partial_data",
+    "diagnostics": {
+      "stocks_checked": 41,
+      "stock_data_missing": 14,
+      "quality_rejections": {
+        "Earnings calendar unavailable": 4,
+        "Option quote timestamps missing or stale": 4,
+        "Elevated realized-volatility rank": 2
+      },
+      "eligible_this_run": 0,
+      "transport": {
+        "success": 49,
+        "http_401": 4,
+        "http_404": 1
+      },
+      "option_chains": {
+        "XPEV": {
+          "status": "received",
+          "contracts": 384,
+          "fresh_quotes": 0,
+          "missing_quote_timestamps": 384
+        },
+        "RIOT": {
+          "status": "received",
+          "contracts": 716,
+          "fresh_quotes": 0,
+          "missing_quote_timestamps": 716
+        },
+        "NOK": {
+          "status": "received",
+          "contracts": 494,
+          "fresh_quotes": 0,
+          "missing_quote_timestamps": 494
+        },
+        "ITUB": {
+          "status": "received",
+          "contracts": 66,
+          "fresh_quotes": 0,
+          "missing_quote_timestamps": 66
+        }
+      }
+    },
+    "qualifying_signals": 0
   }
 ]

@@ -1,7 +1,7 @@
 {
   "trial_id": "budget-options-50-v1",
   "paper_only": true,
-  "as_of": "2026-11-03T20:17:51.479969+00:00",
+  "as_of": "2026-11-04T20:33:46.814486+00:00",
   "status": "collecting",
   "rules": {
     "target_signals": 50,
@@ -35,21 +35,13 @@
   "diagnostics": {
     "stocks_checked": 41,
     "stock_data_missing": 25,
-    "quality_rejections": {
-      "Earnings calendar unavailable": 1,
-      "Option-chain payload invalid": 1
-    },
+    "quality_rejections": {},
     "eligible_this_run": 0,
     "transport": {
-      "success": 43,
-      "http_401": 1,
+      "success": 41,
       "http_404": 1
     },
-    "option_chains": {
-      "WKHS": {
-        "status": "invalid_payload"
-      }
-    }
+    "option_chains": {}
   },
   "conclusion": "INSUFFICIENT_EVIDENCE",
   "limitations": [

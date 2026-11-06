@@ -1,22 +1,23 @@
 {
-  "as_of": "2026-11-05T01:04:53.146121+00:00",
+  "as_of": "2026-11-06T20:06:47.435952+00:00",
   "paper_only": true,
   "diagnostic_only": true,
   "ticker": "SOFI",
-  "stock_bars": 157,
-  "last_stock_bar": 1793826000,
+  "stock_bars": 147,
+  "last_stock_bar": 1793995603,
   "earnings_available": false,
   "realized_volatility_available": true,
   "regime_available": true,
   "option_chain": {
     "status": "received",
-    "contracts": 532,
+    "contracts": 595,
     "fresh_quotes": 0,
-    "missing_quote_timestamps": 532
+    "missing_quote_timestamps": 595
   },
   "transport": {
-    "success": 4,
-    "http_401": 1
+    "success": 3,
+    "http_401": 1,
+    "cache_hit": 1
   },
   "note": "Not a signal or fill. Outside-hours data cannot establish intraday usability."
 }

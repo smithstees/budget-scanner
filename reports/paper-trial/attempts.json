@@ -124,5 +124,32 @@
       "option_chains": {}
     },
     "qualifying_signals": 0
+  },
+  {
+    "as_of": "2026-11-06T20:06:22.011216+00:00",
+    "status": "partial_data",
+    "diagnostics": {
+      "stocks_checked": 41,
+      "stock_data_missing": 26,
+      "quality_rejections": {
+        "Earnings calendar unavailable": 1,
+        "Option quote timestamps missing or stale": 1
+      },
+      "eligible_this_run": 0,
+      "transport": {
+        "success": 43,
+        "http_401": 1,
+        "http_404": 1
+      },
+      "option_chains": {
+        "JOBY": {
+          "status": "received",
+          "contracts": 332,
+          "fresh_quotes": 0,
+          "missing_quote_timestamps": 332
+        }
+      }
+    },
+    "qualifying_signals": 0
   }
 ]

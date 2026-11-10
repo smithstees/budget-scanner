@@ -159,5 +159,21 @@
   {
     "as_of": "2026-11-09T23:10:20.733649+00:00",
     "status": "outside_market_window"
+  },
+  {
+    "as_of": "2026-11-10T20:37:05.220871+00:00",
+    "status": "partial_data",
+    "diagnostics": {
+      "stocks_checked": 41,
+      "stock_data_missing": 22,
+      "quality_rejections": {},
+      "eligible_this_run": 0,
+      "transport": {
+        "success": 41,
+        "http_404": 1
+      },
+      "option_chains": {}
+    },
+    "qualifying_signals": 0
   }
 ]

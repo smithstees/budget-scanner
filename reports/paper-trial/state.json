@@ -20,7 +20,7 @@
     "selection": "Existing live mean-reversion score >=65; exact long CALL/PUT contracts; existing quality filters unchanged"
   },
   "started_at": "2026-10-28T15:32:22.970883+00:00",
-  "last_run_at": "2026-11-06T20:06:22.011216+00:00",
+  "last_run_at": "2026-11-10T20:37:05.220871+00:00",
   "cash": 200.0,
   "signals": [],
   "observations": [
@@ -169,6 +169,20 @@
             "missing_quote_timestamps": 332
           }
         }
+      }
+    },
+    {
+      "as_of": "2026-11-10T20:37:05.220871+00:00",
+      "diagnostics": {
+        "stocks_checked": 41,
+        "stock_data_missing": 22,
+        "quality_rejections": {},
+        "eligible_this_run": 0,
+        "transport": {
+          "success": 41,
+          "http_404": 1
+        },
+        "option_chains": {}
       }
     }
   ],

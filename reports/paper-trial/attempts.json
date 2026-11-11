@@ -175,5 +175,9 @@
       "option_chains": {}
     },
     "qualifying_signals": 0
+  },
+  {
+    "as_of": "2026-11-11T00:55:04.985960+00:00",
+    "status": "outside_market_window"
   }
 ]

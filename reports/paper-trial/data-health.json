@@ -1,10 +1,10 @@
 {
-  "as_of": "2026-11-11T00:55:05.042055+00:00",
+  "as_of": "2026-11-12T02:01:46.248976+00:00",
   "paper_only": true,
   "diagnostic_only": true,
   "ticker": "SOFI",
   "stock_bars": 157,
-  "last_stock_bar": 1794344400,
+  "last_stock_bar": 1794430800,
   "earnings_available": false,
   "realized_volatility_available": true,
   "regime_available": true,

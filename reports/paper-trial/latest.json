@@ -1,7 +1,7 @@
 {
   "trial_id": "budget-options-50-v1",
   "paper_only": true,
-  "as_of": "2026-11-10T20:37:05.220871+00:00",
+  "as_of": "2026-11-13T20:39:51.704301+00:00",
   "status": "collecting",
   "rules": {
     "target_signals": 50,
@@ -34,7 +34,7 @@
   "descriptive_by_direction": {},
   "diagnostics": {
     "stocks_checked": 41,
-    "stock_data_missing": 22,
+    "stock_data_missing": 27,
     "quality_rejections": {},
     "eligible_this_run": 0,
     "transport": {

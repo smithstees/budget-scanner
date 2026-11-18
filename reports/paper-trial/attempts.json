@@ -215,5 +215,9 @@
   {
     "as_of": "2026-11-17T21:54:50.289037+00:00",
     "status": "outside_market_window"
+  },
+  {
+    "as_of": "2026-11-18T21:37:21.422314+00:00",
+    "status": "outside_market_window"
   }
 ]

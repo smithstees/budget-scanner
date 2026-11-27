@@ -1,18 +1,18 @@
 {
-  "as_of": "2026-11-26T22:37:14.194793+00:00",
+  "as_of": "2026-11-27T22:21:30.533941+00:00",
   "paper_only": true,
   "diagnostic_only": true,
   "ticker": "SOFI",
-  "stock_bars": 157,
-  "last_stock_bar": 1795640400,
+  "stock_bars": 121,
+  "last_stock_bar": 1795802400,
   "earnings_available": false,
   "realized_volatility_available": true,
   "regime_available": true,
   "option_chain": {
     "status": "received",
-    "contracts": 562,
+    "contracts": 580,
     "fresh_quotes": 0,
-    "missing_quote_timestamps": 562
+    "missing_quote_timestamps": 580
   },
   "transport": {
     "success": 4,
